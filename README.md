@@ -25,6 +25,8 @@ docker compose up
 
 Open [http://localhost:8090](http://localhost:8090). A stub WebFinger responder lives at `/.well-known/webfinger`.
 
+To get a real map instead of the MapLibre demo basemap, drop a regional PMTiles file into `infra/pmtiles/` — see [`infra/pmtiles/README.md`](infra/pmtiles/README.md) for the Cyprus quick-start.
+
 See [docs/deployment.md](docs/deployment.md) for production.
 
 ## Documentation

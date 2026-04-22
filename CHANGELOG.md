@@ -19,6 +19,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 - Reference instance live at https://camp.trailfed.org — full docker-compose stack (postgres+PostGIS, centrifugo, server, web, caddy) behind nginx + Let's Encrypt TLS.
 - GitHub Actions CI on core repo (`ci.yml`: install, format:check, typecheck, lint, test, docker build) and on landing repo (typecheck + next build) — both green.
 - Progress-tracking rule in `CLAUDE.md`: `NEXT_STEPS.md` is the single source of "what's next", `CHANGELOG.md` is the single source of "what's done", Keep-a-Changelog 1.1 format.
+- Self-hosted PMTiles basemap: Caddy serves `infra/pmtiles/region.pmtiles` at `/tiles/*` with CORS and byte-range support, and the web frontend loads it via the PMTiles protocol — falling back to the MapLibre demo tiles when no file is present. Cyprus is the reference region for the Phase 0 PoC.
 
 ### Changed
 - Pull request template now enforces the progress-tracking rule — each PR has checkboxes for updating `NEXT_STEPS.md` and `CHANGELOG.md` (or marking the change as N/A for typo fixes / CI tweaks / dev-dep bumps).

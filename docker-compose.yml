@@ -69,6 +69,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./infra/pmtiles:/srv/pmtiles:ro
       - caddy-data:/data
       - caddy-config:/config
     ports:
