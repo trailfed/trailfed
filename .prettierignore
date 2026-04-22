@@ -1,0 +1,8 @@
+node_modules
+dist
+build
+.svelte-kit
+coverage
+pnpm-lock.yaml
+LICENSE
+CODE_OF_CONDUCT.md

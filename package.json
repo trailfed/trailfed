@@ -1,0 +1,31 @@
+{
+  "name": "trailfed",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Federated geo-social protocol for travellers",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trailfed/trailfed.git"
+  },
+  "homepage": "https://trailfed.org",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.11.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "format": "prettier --write \"**/*.{ts,js,svelte,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,svelte,json,md,yml,yaml}\""
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.5.0"
+  }
+}

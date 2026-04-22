@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Dev reverse proxy for trailfed — binds on :80 inside the container,
+# exposed on host 127.0.0.1:8090 by docker-compose.
+# For production with a real domain, swap :80 for your hostname and
+# Caddy will provision TLS automatically via Let's Encrypt.
+
+:80 {
+    encode zstd gzip
+
+    # API & federation endpoints → Fedify server
+    @api path /.well-known/* /api/* /nodeinfo/* /users/* /inbox /outbox
+    handle @api {
+        reverse_proxy server:3000
+    }
+
+    # Everything else → SvelteKit frontend
+    handle {
+        reverse_proxy web:5173
+    }
+}

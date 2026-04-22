@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "sourceMap": true
+  },
+  "include": ["src/**/*", ".svelte-kit/ambient.d.ts", ".svelte-kit/types/**/$types.d.ts"],
+  "exclude": ["node_modules", "build", ".svelte-kit"]
+}
