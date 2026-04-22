@@ -46,7 +46,7 @@ Update discipline: tick items as you complete them (`- [ ]` → `- [x]`). Add ne
 - [x] CI workflow on landing repo (typecheck + build) — green
 - [x] DCO workflow on core repo
 - [x] Release workflow publishing to GHCR on version tags
-- [ ] **Phase 0 exit spike — Fedify Actor**: replace the hardcoded WebFinger/NodeInfo JSON with a real `@fedify/fedify` Actor object (Person with `@context`, public key, inbox). File: `server/src/federation/actor.ts`. Done when `/actors/stub` returns a valid ActivityPub Actor JSON-LD.
+- [x] **Phase 0 exit spike — Fedify Actor**: replace the hardcoded WebFinger/NodeInfo JSON with a real `@fedify/fedify` Actor object (Person with `@context`, public key, inbox). File: `server/src/federation/actor.ts`. Done when `/actors/stub` returns a valid ActivityPub Actor JSON-LD.
 - [ ] **Phase 0 exit spike — Drizzle schema & migrations**: translate the schema in `docs/architecture/overview.md` to Drizzle table defs under `server/src/db/schema.ts`, add migration runner, wire into server boot. Done when `docker-compose up` creates all 8 tables and `SELECT` on each works.
 - [ ] **Phase 0 exit spike — OSM PBF importer PoC**: `scripts/import-pbf.ts` downloads a small regional `.pbf`, filters `tourism=camp_site|fuel|dump_station`, inserts 10–20 places into the `places` table. Done when `SELECT COUNT(*) FROM places WHERE source_type='osm'` > 0.
 - [ ] **Phase 0 exit spike — self-hosted PMTiles PoC**: download a regional PMTiles, mount into the web container, point MapLibre at the local tile URL instead of the demo. Done when the map renders without any external tile request.
@@ -87,5 +87,5 @@ Not tracked here yet. Items will be lifted into this file as they enter the work
 
 - [ ] SSH-based deploy workflow for `trailfed/trailfed.org` → `trailfed.org` landing (on push to `main`)
 - [ ] SSH-based deploy workflow for `trailfed/trailfed` → `camp.trailfed.org` (on push to `main`; `docker compose pull && up -d`)
-- [ ] Pull request template with reminders: NEXT_STEPS.md updated, CHANGELOG entry added or N/A
+- [x] Pull request template with reminders: NEXT_STEPS.md updated, CHANGELOG entry added or N/A
 - [ ] Dependabot or renovate for dependency bumps
