@@ -87,5 +87,5 @@ Not tracked here yet. Items will be lifted into this file as they enter the work
 
 - [ ] SSH-based deploy workflow for `trailfed/trailfed.org` → `trailfed.org` landing (on push to `main`)
 - [ ] SSH-based deploy workflow for `trailfed/trailfed` → `camp.trailfed.org` (on push to `main`; `docker compose pull && up -d`)
-- [ ] Pull request template with reminders: NEXT_STEPS.md updated, CHANGELOG entry added or N/A
+- [x] Pull request template with reminders: NEXT_STEPS.md updated, CHANGELOG entry added or N/A
 - [ ] Dependabot or renovate for dependency bumps
