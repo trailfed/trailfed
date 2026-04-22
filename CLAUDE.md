@@ -108,3 +108,29 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - Governance: ADRs in [docs/adr/](docs/adr/) — material architectural changes require an ADR.
 - Contribution flow uses DCO sign-off (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 - License is AGPL-3.0-or-later; don't introduce dependencies with incompatible licenses.
+
+## Отслеживание прогресса — обязательное правило
+
+В репозитории три канонических источника правды. Не создавать параллельные списки.
+
+- **[`NEXT_STEPS.md`](NEXT_STEPS.md)** — единственный источник «что дальше». Список задач по фазам, чекбоксы `- [ ]`. Порядок = приоритет.
+- **[`CHANGELOG.md`](CHANGELOG.md)** — единственный источник «что сделано». Формат [Keep a Changelog 1.1](https://keepachangelog.com/en/1.1.0/). Сверху всегда секция `## [Unreleased]`.
+- **GitHub Releases** — генерируются из `CHANGELOG.md` при теге. Вручную не писать.
+
+### Перед завершением любой задачи агент ОБЯЗАН:
+
+1. **Отметить выполненный пункт** в `NEXT_STEPS.md`: `- [ ]` → `- [x]`. Если задачи там не было — добавить её задним числом в нужную фазу и сразу отметить сделанной (для истории).
+2. **Добавить запись** в `CHANGELOG.md` в секцию `## [Unreleased]`, в подсекцию `Added` / `Changed` / `Fixed` / `Removed` / `Security` / `Deprecated`. Одна строка, пользовательский язык, без внутреннего жаргона.
+3. **Не трогать** `docs/roadmap.md` ради статуса задач — это нарративный документ по фазам; оперативные задачи живут только в `NEXT_STEPS.md`.
+
+### Что НЕ писать в CHANGELOG.md
+
+Правки опечаток, бампы dev-зависимостей, внутренние CI-твики, рефакторинг без пользовательского эффекта. Для них достаточно commit-сообщения.
+
+### Релиз (когда накопится осмысленный набор изменений)
+
+Переименовать `## [Unreleased]` → `## [0.x.0] — YYYY-MM-DD`, создать пустую `## [Unreleased]` сверху, поставить git-тег `v0.x.0`, `gh release create` подтянет описание из CHANGELOG.
+
+### Источник паттерна
+
+Mastodon (CHANGELOG.md в Keep-a-Changelog + GitHub Releases) + Element/Matrix (публичный список "что дальше"). Детали: https://keepachangelog.com/en/1.1.0/
