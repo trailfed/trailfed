@@ -5,6 +5,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 ## [Unreleased] — Phase 0 scaffold
 
 ### Added
+- First real federation endpoint — the reference instance now publishes a discoverable ActivityPub `Person` at `/actors/stub` with an RSA public key, and WebFinger resolves `acct:stub@camp.trailfed.org` to it.
 - Monorepo layout (pnpm workspaces) with `server/` (Fedify + Hono) and `web/` (SvelteKit + MapLibre + PMTiles).
 - Docker Compose dev stack: PostgreSQL 16 + PostGIS 3.4, Centrifugo v6, server, web, Caddy reverse proxy.
 - Governance: AGPL-3.0 license, Contributor Covenant 2.1, CONTRIBUTING (DCO sign-off, no CLA), SECURITY policy (90-day coordinated disclosure), GOVERNANCE model (BDFL → Maintainer Council).
@@ -21,6 +22,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 - Self-hosted PMTiles basemap: Caddy serves `infra/pmtiles/region.pmtiles` at `/tiles/*` with CORS and byte-range support, and the web frontend loads it via the PMTiles protocol — falling back to the MapLibre demo tiles when no file is present. Cyprus is the reference region for the Phase 0 PoC.
 
 ### Changed
+- Pull request template now enforces the progress-tracking rule — each PR has checkboxes for updating `NEXT_STEPS.md` and `CHANGELOG.md` (or marking the change as N/A for typo fixes / CI tweaks / dev-dep bumps).
 - WebFinger and NodeInfo stubs now honour `PUBLIC_ORIGIN` so federated URLs advertise the public https scheme/host behind the reverse proxy.
 - Centrifugo configuration migrated from v5 to v6 schema (top-level secret keys moved under `client.token` and `http_api`).
 
