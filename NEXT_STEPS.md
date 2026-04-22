@@ -1,79 +1,91 @@
-# Next Steps — actions that need the project owner
+# Next Steps
 
-Everything the agent could do locally is in the repo. This file lists the **external actions** that require your credentials or manual work before the project is fully bootstrapped.
+Canonical list of outstanding work, organised by phase. See [`CHANGELOG.md`](CHANGELOG.md) for what's already been delivered. Order within each phase = priority.
 
-## 1. Domain registration (~$40–60 / year)
+Update discipline: tick items as you complete them (`- [ ]` → `- [x]`). Add new items in the appropriate phase rather than creating parallel lists elsewhere. See [CLAUDE.md](CLAUDE.md#отслеживание-прогресса--обязательное-правило) for the rule.
 
-Register at least `trailfed.org` (primary). Recommended defensive additions: `trailfed.com`, `trailfed.dev`.
+---
 
-Suggested registrars:
-- **Porkbun** — good WHOIS privacy, clean UX.
-- **Namecheap** — reliable, supports 2FA.
+## Phase 0 — public scaffold
 
-Update DNS later when the first public instance goes live.
+### Infrastructure & identity
 
-## 2. GitHub org & repo
+- [x] Register `trailfed.org` (primary domain)
+- [x] Create GitHub org `trailfed`
+- [x] Push core repo to `github.com/trailfed/trailfed`
+- [x] Push landing repo to `github.com/trailfed/trailfed.org`
+- [x] Push org profile repo to `github.com/trailfed/.github`
+- [x] Branch protection on `main` (1 review required) — both core and landing repos
+- [x] Private vulnerability reporting enabled on core repo
+- [x] Core labels created (`good-first-issue`, `help-wanted`, `phase-0`, `federation`, `osm`, `security`)
+- [x] DNS: `camp.trailfed.org` A record → server
+- [x] TLS certificates via Let's Encrypt (`trailfed.org`, `www.trailfed.org`, `camp.trailfed.org`)
+- [x] nginx reverse-proxy vhosts for landing and reference instance
+- [x] Landing site live at https://trailfed.org (Next.js 15 + Tailwind, systemd-managed)
+- [x] Reference instance live at https://camp.trailfed.org (docker-compose stack healthy)
+- [ ] Register defensive domains: `trailfed.com`, `trailfed.dev`
+- [ ] Email forwarders on `trailfed.org`:
+    - [ ] `conduct@` (referenced in CODE_OF_CONDUCT.md)
+    - [ ] `security@` (referenced in SECURITY.md)
+    - [ ] `info@` (used as GitHub org contact)
 
-1. Create org `trailfed` at https://github.com/organizations/new — free tier is fine.
-2. Create repo `trailfed/trailfed`, public, **without** initial README/LICENSE/gitignore (we already have them).
-3. Push this local repo:
-   ```bash
-   cd /home/vanlife/trailfed
-   git add -A
-   git commit -s -m "feat: Phase 0 scaffold — governance, ADRs, docker-compose"
-   git remote add origin git@github.com:trailfed/trailfed.git
-   git branch -M main
-   git push -u origin main
-   ```
-4. Settings → Branches → protect `main` (require PR + 1 review + status checks: CI, DCO).
-5. Settings → Security → enable "Private vulnerability reporting".
-6. Settings → Actions → allow GitHub Actions + "Read and write permissions" for the release pipeline.
-7. Add labels via `gh label create`:
-   ```bash
-   gh label create good-first-issue --color '7057ff' --description 'Good for newcomers'
-   gh label create help-wanted       --color '008672' --description 'Extra attention needed'
-   gh label create phase-0           --color 'cccccc'
-   gh label create federation        --color '1d76db'
-   gh label create osm               --color '5319e7'
-   gh label create security          --color 'b60205'
-   ```
+### Social identities (reserve before squatters)
 
-## 3. Social identities (reserve the name before squatters)
+- [ ] Mastodon — `@trailfed@fosstodon.org` (or chosen server)
+- [ ] Bluesky — `trailfed.bsky.social`; later set DID to custom domain on `trailfed.org`
+- [ ] Matrix — community room `#trailfed:matrix.org`
+- [ ] X/Twitter — `@trailfed_org`
 
-- Mastodon: register `@trailfed@fosstodon.org` (or another server). Bio links to repo.
-- Bluesky: register `trailfed.bsky.social` (and later set up DID/custom domain on `trailfed.org`).
-- Matrix: create room `#trailfed:matrix.org` for community chat.
-- X/Twitter: register `@trailfed_org` (the plain `@trailfed` is free but account creation needs the web UI).
+### Code — completeness of the Phase 0 scaffold
 
-## 4. Email addresses
+- [x] Monorepo (pnpm workspaces: `server/`, `web/`)
+- [x] Docker Compose dev stack (Postgres/PostGIS, Centrifugo v6, server, web, Caddy)
+- [x] Server stub: `/`, `/healthz`, `/.well-known/webfinger`, `/nodeinfo/2.0`
+- [x] Web stub: SvelteKit page rendering with MapLibre
+- [x] CI workflow on core repo (lint, typecheck, format, test, docker build) — green
+- [x] CI workflow on landing repo (typecheck + build) — green
+- [x] DCO workflow on core repo
+- [x] Release workflow publishing to GHCR on version tags
+- [ ] **Phase 0 exit spike — Fedify Actor**: replace the hardcoded WebFinger/NodeInfo JSON with a real `@fedify/fedify` Actor object (Person with `@context`, public key, inbox). File: `server/src/federation/actor.ts`. Done when `/actors/stub` returns a valid ActivityPub Actor JSON-LD.
+- [ ] **Phase 0 exit spike — Drizzle schema & migrations**: translate the schema in `docs/architecture/overview.md` to Drizzle table defs under `server/src/db/schema.ts`, add migration runner, wire into server boot. Done when `docker-compose up` creates all 8 tables and `SELECT` on each works.
+- [ ] **Phase 0 exit spike — OSM PBF importer PoC**: `scripts/import-pbf.ts` downloads a small regional `.pbf`, filters `tourism=camp_site|fuel|dump_station`, inserts 10–20 places into the `places` table. Done when `SELECT COUNT(*) FROM places WHERE source_type='osm'` > 0.
+- [ ] **Phase 0 exit spike — self-hosted PMTiles PoC**: download a regional PMTiles, mount into the web container, point MapLibre at the local tile URL instead of the demo. Done when the map renders without any external tile request.
 
-Minimum at the registered domain:
-- `conduct@trailfed.org` — CoC reports (referenced in `CODE_OF_CONDUCT.md`)
-- `security@trailfed.org` — vulnerability reports (referenced in `SECURITY.md`)
+### External validation (roadmap exit criteria)
 
-Forwarders to a maintainer's personal mailbox are fine in Phase 0.
+- [ ] Federation profile (`docs/spec/federation.md`) reviewed by ≥ 2 people active in ActivityPub spec work
+- [ ] OSM/ODbL boundary (`docs/spec/osm.md`) reviewed by an OSM contributor
+- [ ] Public tracking issue `phase-0` updated on every milestone; closed when every checkbox on this list is ticked
 
-## 5. First deploy verification
+### Announce (only after spikes are green)
 
-Once repo is on GitHub and CI green:
+- [ ] Fediverse post from `@trailfed@fosstodon.org`
+- [ ] `r/selfhosted`, `r/fediverse` posts linking to repo
+- [ ] NLnet NGI0 grant enquiry — https://nlnet.nl/propose/
 
-```bash
-# On a clean machine:
-git clone https://github.com/trailfed/trailfed.git
-cd trailfed
-cp .env.example .env
-docker compose up --build
-# Open http://localhost:8090 → SvelteKit + MapLibre should render.
-# curl http://localhost:8090/.well-known/webfinger?resource=acct:test@localhost → 200 JSON stub.
-# curl http://localhost:8090/nodeinfo/2.0 → 200 JSON with software.name=trailfed.
-```
+---
 
-## 6. Announce (optional, only after CI is green)
+## Phase 1 — ActivityPub MVP (not started)
 
-- Fediverse post from `@trailfed@fosstodon.org`: "Phase 0 scaffold is public. Looking for contributors, especially anyone who enjoys Fedify, MapLibre or OSM imports."
-- r/selfhosted, r/fediverse — short post linking to repo.
-- NLnet NGI0 grant enquiry — https://nlnet.nl/propose/
+Scope per `docs/roadmap.md`: minimal working federated server with user accounts, basic follow graph, places published as `Create Place`, and inter-instance delivery. All items to be expanded when Phase 0 spikes confirm the direction.
 
-## Tracking
+- [ ] User registration + WebFinger resolution (real, not stubbed)
+- [ ] Inbox/outbox endpoints with signature verification (HTTP Signatures draft-cavage-12)
+- [ ] `Place` Activity type end-to-end (create, follow, federate)
+- [ ] Basic federation test against a second local instance
+- [ ] Moderation primitives: block list, report action
 
-Open a tracking issue in the new repo labelled `phase-0` with the above checklist. Close it when all items are done — that marks the end of Phase 0.
+---
+
+## Phase 2+ — see `docs/roadmap.md`
+
+Not tracked here yet. Items will be lifted into this file as they enter the working set.
+
+---
+
+## CI / automation (cross-phase)
+
+- [ ] SSH-based deploy workflow for `trailfed/trailfed.org` → `trailfed.org` landing (on push to `main`)
+- [ ] SSH-based deploy workflow for `trailfed/trailfed` → `camp.trailfed.org` (on push to `main`; `docker compose pull && up -d`)
+- [ ] Pull request template with reminders: NEXT_STEPS.md updated, CHANGELOG entry added or N/A
+- [ ] Dependabot or renovate for dependency bumps
