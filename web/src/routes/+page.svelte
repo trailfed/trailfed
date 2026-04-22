@@ -38,7 +38,10 @@
   :global(html, body) {
     margin: 0;
     padding: 0;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
     height: 100%;
   }
   :global(body) {

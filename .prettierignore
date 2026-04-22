@@ -2,7 +2,22 @@ node_modules
 dist
 build
 .svelte-kit
+.next
 coverage
 pnpm-lock.yaml
+package-lock.json
 LICENSE
+
+# Human-authored prose — preserve line wrapping and voice
+docs/
+CHANGELOG.md
+CLAUDE.md
+CLAUDE.local.md
 CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+GOVERNANCE.md
+NEXT_STEPS.md
+README.md
+SECURITY.md
+.github/ISSUE_TEMPLATE/
+.github/PULL_REQUEST_TEMPLATE.md
