@@ -20,6 +20,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 - Progress-tracking rule in `CLAUDE.md`: `NEXT_STEPS.md` is the single source of "what's next", `CHANGELOG.md` is the single source of "what's done", Keep-a-Changelog 1.1 format.
 
 ### Changed
+- Pull request template now enforces the progress-tracking rule — each PR has checkboxes for updating `NEXT_STEPS.md` and `CHANGELOG.md` (or marking the change as N/A for typo fixes / CI tweaks / dev-dep bumps).
 - WebFinger and NodeInfo stubs now honour `PUBLIC_ORIGIN` so federated URLs advertise the public https scheme/host behind the reverse proxy.
 - Centrifugo configuration migrated from v5 to v6 schema (top-level secret keys moved under `client.token` and `http_api`).
 

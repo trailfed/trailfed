@@ -36,3 +36,8 @@ Thanks for contributing to TrailFed!
 - [ ] CI passes (lint, typecheck, tests, docker build)
 - [ ] Docs updated if behaviour changed
 - [ ] If touching federation protocol / schema: new or updated ADR in `docs/adr/`
+
+### Progress tracking (required — see [CLAUDE.md](../CLAUDE.md#отслеживание-прогресса--обязательное-правило))
+
+- [ ] `NEXT_STEPS.md` updated: ticked `- [ ]` → `- [x]`, or new item added, or N/A for trivial fixes
+- [ ] `CHANGELOG.md` entry added under `## [Unreleased]` in the right sub-section (`Added` / `Changed` / `Fixed` / `Removed` / `Security` / `Deprecated`), or N/A for typo fixes / CI tweaks / dev-dep bumps
