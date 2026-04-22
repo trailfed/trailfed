@@ -6,6 +6,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 
 ### Added
 - Database schema and migration runner (Drizzle ORM) for the nine core tables — actors, places, place_sources, activities, notes, checkins, follows, peers, live_locations — including PostGIS `geography(Point, 4326)` columns and spatial GIST indexes. Operators apply migrations with `pnpm --filter @trailfed/server migrate` before first start.
+- First real federation endpoint — the reference instance now publishes a discoverable ActivityPub `Person` at `/actors/stub` with an RSA public key, and WebFinger resolves `acct:stub@camp.trailfed.org` to it.
 - Monorepo layout (pnpm workspaces) with `server/` (Fedify + Hono) and `web/` (SvelteKit + MapLibre + PMTiles).
 - Docker Compose dev stack: PostgreSQL 16 + PostGIS 3.4, Centrifugo v6, server, web, Caddy reverse proxy.
 - Governance: AGPL-3.0 license, Contributor Covenant 2.1, CONTRIBUTING (DCO sign-off, no CLA), SECURITY policy (90-day coordinated disclosure), GOVERNANCE model (BDFL → Maintainer Council).
@@ -21,6 +22,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 - Progress-tracking rule in `CLAUDE.md`: `NEXT_STEPS.md` is the single source of "what's next", `CHANGELOG.md` is the single source of "what's done", Keep-a-Changelog 1.1 format.
 
 ### Changed
+- Pull request template now enforces the progress-tracking rule — each PR has checkboxes for updating `NEXT_STEPS.md` and `CHANGELOG.md` (or marking the change as N/A for typo fixes / CI tweaks / dev-dep bumps).
 - WebFinger and NodeInfo stubs now honour `PUBLIC_ORIGIN` so federated URLs advertise the public https scheme/host behind the reverse proxy.
 - Centrifugo configuration migrated from v5 to v6 schema (top-level secret keys moved under `client.token` and `http_api`).
 
