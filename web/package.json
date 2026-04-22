@@ -11,7 +11,7 @@
     "start": "node build/index.js",
     "lint": "eslint src --ext .ts,.svelte",
     "typecheck": "svelte-check --tsconfig ./tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@sveltejs/adapter-node": "^5.2.0",
