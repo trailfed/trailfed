@@ -8,6 +8,12 @@ const log = pino({ name: 'trailfed-server' });
 
 const app = new Hono();
 
+// When behind a reverse proxy (nginx/Caddy), use PUBLIC_ORIGIN so WebFinger
+// and NodeInfo advertise the correct scheme/host regardless of the internal
+// URL the request arrived on.
+const publicOrigin = process.env.PUBLIC_ORIGIN ?? '';
+const origin = (c: { req: { url: string } }) => publicOrigin || new URL(c.req.url).origin;
+
 app.get('/', (c) =>
   c.json({
     name: 'trailfed',
@@ -32,7 +38,7 @@ app.get('/.well-known/webfinger', (c) => {
       {
         rel: 'self',
         type: 'application/activity+json',
-        href: `${new URL(c.req.url).origin}/users/stub`,
+        href: `${origin(c)}/users/stub`,
       },
     ],
   });
