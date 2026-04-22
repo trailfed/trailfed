@@ -1,84 +1,84 @@
 ---
-title: Концепция TrailFed
+title: TrailFed Vision
 version: 0.1
 status: draft
 updated: 2026-04-22
 ---
 
-# 01. Видение и проблема
+# 01. Vision and problem
 
-## Проблема
+## Problem
 
-Рынок приложений для автономных путешествий фрагментирован. Vanlife, RV, overland, sailing, bike touring, motorcycle travel, trucking и long-term travel используют разные инструменты, хотя у них много общих задач: где остановиться, где заправиться, где взять воду, где безопасно переночевать, где пройти границу, где найти ремонт, интернет и локальную инфраструктуру.
+The market for self-sufficient travel apps is fragmented. Vanlife, RV, overland, sailing, bike touring, motorcycle travel, trucking, and long-term travel use different tools, despite sharing many of the same concerns: where to stop, where to refuel, where to get water, where it's safe to spend the night, where to cross a border, where to find repairs, internet, and local infrastructure.
 
-Пользователь сегодня вынужден использовать 5-7 приложений параллельно:
+Today's user is forced to juggle 5–7 apps in parallel:
 
-- **Park4Night** (~7M пользователей) — точки для кемперов и RV в Европе, проприетарные данные
-- **iOverlander** — overland-точки, CSV-экспорт, но нет API
-- **Campendium** (~750k contributors) — кемпинги США, закрытая БД
-- **The Dyrt** — subscription-based, кемпинги с reviewами
-- **WikiCamps** — только Австралия, закрытая
-- **Polarsteps** — трекинг путешествий, не геосоциальный
-- **Navily / NoForeignLand / Waterway Guide** — marine/yacht POI, марины и якорные стоянки, но отдельно от road travel
-- **Rever / Calimoto / OsmAnd / Komoot** — маршруты для байкеров, велосипедистов и outdoor, но без federation POI слоя
-- **Mastodon/Twitter** — общение с другими путешественниками, но нет геоданных
+- **Park4Night** (~7M users) — points of interest for campers and RVs in Europe, proprietary data
+- **iOverlander** — overland POIs, CSV export but no API
+- **Campendium** (~750k contributors) — US campgrounds, closed database
+- **The Dyrt** — subscription-based campgrounds with reviews
+- **WikiCamps** — Australia only, closed
+- **Polarsteps** — travel tracking, not geo-social
+- **Navily / NoForeignLand / Waterway Guide** — marine/yacht POIs, marinas and anchorages, but siloed from road travel
+- **Rever / Calimoto / OsmAnd / Komoot** — routing for motorcyclists, cyclists, and outdoor users, but without a federated POI layer
+- **Mastodon/Twitter** — communication with other travellers, but no geodata
 
-Каждое приложение владеет **своим островом данных**. Пользователь копирует точки вручную между приложениями, дублирует отзывы, не видит полной картины.
+Each app owns **its own island of data**. Users manually copy points between apps, duplicate reviews, and never see the full picture.
 
-## Почему предыдущие попытки унификации провалились
+## Why previous unification attempts failed
 
 ### FreeRoam (2019–2024)
-Закрылся в 2024. Причина: чисто краудсорсинговая модель без коммерческой модели, без quality control, без sustainability. Данные плохого качества не могли конкурировать с проприетарными (Campendium). Успешник KampTrail пошёл другим путём — использует verified federal data (RIDB API), отказавшись от crowdsourcing.
+Shut down in 2024. Root cause: a purely crowdsourced model with no commercial model, no quality control, no sustainability. Low-quality data could not compete with proprietary sources (Campendium). The successful outlier, KampTrail, took a different route — it uses verified federal data (RIDB API) and skipped crowdsourcing.
 
 ### OpenCampingMap (opencampingmap.org)
-Существует, активен, но **нишевый**. Проблемы: только read-only consumer OSM, нет user contribution, нет API для сторонних приложений, нет review system. Volunteer-only, не может конкурировать с маркетингом The Dyrt или UX Park4Night.
+Exists and is active, but **niche**. Problems: read-only consumer OSM, no user contributions, no API for third-party apps, no review system. Volunteer-only, unable to compete with The Dyrt's marketing or Park4Night's UX.
 
-### Попытки "open camping standard"
-Множественные OGC / GTFS-подобные попытки не взлетели. Причины:
-1. **Commercial moat** — каждое приложение видит данные как свой конкурентный актив. Отдавать в центральную БД = потерять bargaining power.
-2. **Quality control expensive** — moderated contributions требуют платных модераторов. Volunteer модель не масштабируется.
-3. **Liability** — компании боятся ответственности за неверные данные (wrong info → accident). Crowdsourced data без verification = риск.
-4. **No agreed schema** — каждое приложение использует свою модель данных.
+### "Open camping standard" attempts
+Multiple OGC / GTFS-style attempts failed to take off. Reasons:
+1. **Commercial moat** — every app treats its data as a competitive asset. Handing it off to a central database means losing bargaining power.
+2. **Quality control is expensive** — moderated contributions require paid moderators. A volunteer model does not scale.
+3. **Liability** — companies fear being held responsible for incorrect data (wrong info → accident). Crowdsourced data without verification is a risk.
+4. **No agreed schema** — every app uses its own data model.
 
-## Инсайт: почему федеративная модель работает там, где централизация провалилась
+## Insight: why a federated model works where centralization failed
 
-Модель **Mastodon/ActivityPub** (или аналогично email, Git) решает все четыре проблемы:
+The **Mastodon/ActivityPub** model (analogous to email or Git) addresses all four problems:
 
-| Проблема | Решение в федеративной модели |
+| Problem | Solution in the federated model |
 |---|---|
-| Commercial moat | Каждый instance владеет своими данными, не отдаёт в "central". Шарит ТО что хочет. |
-| Quality control | Каждый instance модерирует сам. Бассейн trusted peers → качественный pool. |
-| Liability | Данные под подписью конкретного instance/actor. Ответственность на подписавшем. |
-| Agreed schema | W3C ActivityPub + AS Vocabulary (Place, Travel, Arrive) уже существуют. |
+| Commercial moat | Every instance owns its data and does not hand it to a "central" system. It shares only what it chooses. |
+| Quality control | Each instance moderates itself. A pool of trusted peers produces a high-quality shared pool. |
+| Liability | Data is signed by a specific instance/actor. Responsibility lies with the signer. |
+| Agreed schema | W3C ActivityPub + AS Vocabulary (Place, Travel, Arrive) already exist. |
 
-**Killer pitch для закрытых apps (Park4Night и т.д.):** "Вы не отдаёте данные — вы запускаете свой instance. Шарите публичные POI, не приватные user данные. Получаете федерированные данные от других instances. Exit в любой момент — отключили federation, ничего не сломалось."
+**Killer pitch for closed apps (Park4Night, etc.):** "You're not giving your data away — you're running your own instance. You share public POIs, not private user data. You receive federated data from other instances. You can exit at any time — disable federation and nothing breaks."
 
-Это **positive-sum game** вместо zero-sum "кто владеет базой".
+This is a **positive-sum game** instead of a zero-sum "who owns the database".
 
-## Видение
+## Vision
 
-**TrailFed — это SMTP для travel POI и social.** Open protocol + reference implementation + web client. Важно: проект начинается не как ещё один centralized travel app, а как открытый federation layer, который могут использовать self-hosters, community apps, tourism boards и existing travel products.
+**TrailFed is SMTP for travel POIs and travel social.** Open protocol + reference implementation + web client. Crucially, the project does not start as yet another centralized travel app, but as an open federation layer usable by self-hosters, community apps, tourism boards, and existing travel products.
 
-Любой может:
+Anyone can:
 
-1. Клонировать с GitHub, запустить на своём сервере (10 минут setup)
-2. Получить полноценный "POI map + travel social + federation layer" из коробки
-3. Федерироваться с trusted instances (POI, posts, check-ins синхронизируются по capability profile)
-4. Интегрировать через REST API в любое стороннее приложение (как OSM API)
-5. Кастомизировать под свою аудиторию (RV, overland, sailing, bike touring, motorcycle travel, trucking, digital nomads)
+1. Clone from GitHub and run it on their own server (10-minute setup)
+2. Get a full "POI map + travel social + federation layer" out of the box
+3. Federate with trusted instances (POIs, posts, and check-ins sync according to a capability profile)
+4. Integrate via REST API into any third-party application (similar to the OSM API)
+5. Customize for their audience (RV, overland, sailing, bike touring, motorcycle travel, trucking, digital nomads)
 
-## Целевая аудитория
+## Target audience
 
 ### Primary: Self-hosters + technical travelers
-Первые 100-500 пользователей — технические люди которые уже фолловят `r/selfhosted`, `r/fediverse`, знают что такое Mastodon. Они поднимают instance, тестируют, дают feedback.
+The first 100–500 users — technical people who already follow `r/selfhosted`, `r/fediverse`, and know what Mastodon is. They stand up an instance, test it, and give feedback.
 
 ### Secondary: Community-driven apps
-После Phase 2 — разработчики существующих travel приложений. Они видят federation как way to access более широкого pool данных без отдачи контроля.
+After Phase 2 — developers of existing travel apps. They see federation as a way to access a wider pool of data without giving up control.
 
 ### Tertiary: End users (travel-in-motion communities)
-После Phase 4 — обычные путешественники регистрируются на публичных instances (как регистрируются на mastodon.social). Не обязаны поднимать свой сервер.
+After Phase 4 — ordinary travellers register on public instances (the way people sign up on mastodon.social). They are not required to run their own server.
 
-Целевые сообщества:
+Target communities:
 
 - Van / RV / caravan travelers
 - Overlanders
@@ -90,41 +90,41 @@ updated: 2026-04-22
 - Truck drivers and professional road users
 
 ### Future: Legacy apps
-Park4Night, iOverlander, Campendium — когда 10k+ federated POIs существуют не в их базе, они вынуждены подключиться (или потерять edge).
+Park4Night, iOverlander, Campendium — once 10k+ federated POIs exist outside their databases, they will have strong incentives to connect (or lose their edge).
 
-## Product boundaries после fact-check
+## Product boundaries after fact-check
 
-Чтобы не превратить проект в "Mastodon + Park4Night + Strava + Find My" одновременно, TrailFed делится на три deliverables:
+To avoid turning the project into "Mastodon + Park4Night + Strava + Find My" all at once, TrailFed is split into three deliverables:
 
-1. **Protocol/spec** — GeoSocial compatibility profile поверх ActivityPub/ActivityStreams: `Place`, `Arrive`, `Leave`, `Travel`, license metadata, source attribution, quality/confidence.
+1. **Protocol/spec** — a GeoSocial compatibility profile on top of ActivityPub/ActivityStreams: `Place`, `Arrive`, `Leave`, `Travel`, license metadata, source attribution, quality/confidence.
 2. **Reference server** — federation, PostGIS storage, moderation, imports, REST API, admin tools.
-3. **Web client** — map-first PWA для просмотра/создания POI, check-ins, reviews и basic social timeline.
+3. **Web client** — map-first PWA for browsing and creating POIs, check-ins, reviews, and a basic social timeline.
 
-Live location sharing остаётся optional/future capability. Она не должна блокировать ранний POI federation MVP и требует отдельного threat model review перед production.
+Live location sharing remains an optional/future capability. It must not block the early POI federation MVP and requires its own threat-model review before production.
 
 ## Non-goals
 
-Что TrailFed **не делает**:
-- Не конкурирует с OSM — additive, а не replacement. Мы используем OSM как базу, добавляем слой travel-specific данных, отзывов, confidence и federation metadata.
-- Не Airbnb/Booking/Navily для стоянок и марин — не booking platform. Мы indexим точки и публичные сведения, бронирование вне scope.
-- Не навигационная система — маршрутизация опциональна (через OSRM), но это не Google Maps killer.
-- Не satellite imagery — vector tiles only (Protomaps).
-- Не закрытая платформа — AGPL-3, любой форк обязан быть open.
-- Не platform для monetization — instances могут быть коммерческими (свой бизнес), но protocol/reference server открытые.
-- Не full Mastodon replacement в ранних фазах — совместимость с Mastodon нужна для actors, follows, notes и clients where practical, но `Place`/`Arrive`/`Travel` полноценно работают только с geo-aware peers.
-- Не real-time tracking product в v1.0 — live location high-risk, opt-in future feature.
+What TrailFed **does not** do:
+- Does not compete with OSM — additive, not a replacement. We use OSM as a base and add a layer of travel-specific data, reviews, confidence, and federation metadata.
+- Not an Airbnb/Booking/Navily for stopovers and marinas — not a booking platform. We index points and public information; reservations are out of scope.
+- Not a navigation system — routing is optional (via OSRM), but this is not a Google Maps killer.
+- No satellite imagery — vector tiles only (Protomaps).
+- Not a closed platform — AGPL-3; any fork must stay open.
+- Not a platform for monetization — instances may be commercial (someone's business), but the protocol and reference server are open.
+- Not a full Mastodon replacement in the early phases — Mastodon compatibility is needed for actors, follows, notes, and clients where practical, but `Place`/`Arrive`/`Travel` only work fully with geo-aware peers.
+- Not a real-time tracking product in v1.0 — live location is high-risk, an opt-in future feature.
 
 ---
 
-## Fact-check questions для агентов
+## Fact-check questions for agents
 
-1. Данные о пользователях Park4Night (~7M) — откуда взяты? Актуальны на 2026?
-2. FreeRoam закрылся в 2024 точно по причине unsustainable crowdsourcing, или есть другие факторы?
-3. KampTrail действительно использует RIDB API и отказался от crowdsourcing?
-4. iOverlander реально поощряет контрибьюции в OSM (как мы утверждаем)?
-5. Park4Night активно защищает свои данные (есть ли DMCA/legal cases)?
-6. W3C ActivityPub/ActivityStreams действительно имеет `Place`, `Travel`, `Arrive`, `Leave` types (первичный fact-check: да, ActivityStreams Vocabulary).
-7. Корректно ли описан OpenCampingMap как "read-only consumer OSM"?
-8. Существуют ли другие failed attempts к camping standard кроме FreeRoam и OpenCampingMap?
-9. Корректна ли формулировка "legacy apps вынуждены подключиться" или лучше заменить на "получат incentive подключиться"?
-10. Какой минимальный capability profile нужен, чтобы `Place` federation была полезной без полного social stack?
+1. Where does the Park4Night user count (~7M) come from? Is it current as of 2026?
+2. Did FreeRoam shut down in 2024 specifically due to unsustainable crowdsourcing, or are there other factors?
+3. Does KampTrail actually use the RIDB API and reject crowdsourcing?
+4. Does iOverlander really encourage contributions back to OSM (as we claim)?
+5. Does Park4Night actively defend its data (any DMCA/legal cases)?
+6. Does W3C ActivityPub/ActivityStreams actually have `Place`, `Travel`, `Arrive`, `Leave` types (initial fact-check: yes, via the ActivityStreams Vocabulary).
+7. Is OpenCampingMap accurately described as "read-only consumer OSM"?
+8. Are there other failed attempts at a camping standard beyond FreeRoam and OpenCampingMap?
+9. Is "legacy apps will be forced to connect" accurate, or is "will have incentive to connect" better?
+10. What is the minimum capability profile required for `Place` federation to be useful without a full social stack?

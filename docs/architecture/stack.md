@@ -1,19 +1,19 @@
 ---
-title: Технологический стек
+title: Technology Stack
 version: 0.1
 status: draft
 updated: 2026-04-22
 ---
 
-# 04. Выбор технологий и обоснование
+# 04. Technology Choices and Rationale
 
-## Обзор финального стека
+## Overview of the final stack
 
-| Слой | Технология | Лицензия | Почему |
+| Layer | Technology | License | Why |
 |---|---|---|---|
-| Backend | **Go 1.22+** или **TypeScript/Fedify** | BSD / MIT | Go даёт single binary; Fedify может ускорить ActivityPub MVP |
+| Backend | **Go 1.22+** or **TypeScript/Fedify** | BSD / MIT | Go gives a single binary; Fedify may accelerate the ActivityPub MVP |
 | ActivityPub | **ADR pending: go-fed/activity vs Fedify** | BSD / MIT | go-fed mature but low-activity; Fedify active and feature-rich |
-| Database | **PostgreSQL 16 + PostGIS 3.4** | PostgreSQL + GPL | Стандарт геоданных, mature |
+| Database | **PostgreSQL 16 + PostGIS 3.4** | PostgreSQL + GPL | Industry standard for geodata, mature |
 | Real-time | **Centrifugo v6** | Apache 2.0 | Standalone WebSocket Go server; optional until live features |
 | Map tiles | **Protomaps PMTiles regional extracts** | BSD-3 / ODbL data | Single-file vector tiles, no API keys; full planet is large |
 | Map rendering | **MapLibre GL JS + pmtiles plugin** | BSD-3 | Open fork of Mapbox, vector tiles support |
@@ -24,172 +24,172 @@ updated: 2026-04-22
 
 ## Backend decision: Go vs TypeScript/Fedify
 
-**Current recommendation:** не фиксировать Go окончательно до ADR-001. Для Phase 0 нужно сделать spike:
+**Current recommendation:** do not lock in Go before ADR-001. Phase 0 requires a spike:
 
-1. Minimal `Actor` + WebFinger + signed inbox/outbox на Go/go-fed.
-2. То же на TypeScript/Fedify.
-3. Сравнить effort, compatibility, maintenance risk, Docker footprint и developer velocity.
+1. Minimal `Actor` + WebFinger + signed inbox/outbox on Go/go-fed.
+2. The same on TypeScript/Fedify.
+3. Compare effort, compatibility, maintenance risk, Docker footprint, and developer velocity.
 
-Go остаётся сильным кандидатом для low-RAM self-host server. Но после fact-check нельзя утверждать, что go-fed "actively maintained": latest tagged release v1.0.0 был в 2020, репозиторий mature/stable, но low-activity. Fedify на 2026 выглядит активно развиваемым framework с WebFinger, HTTP Signatures, HTTP Message Signatures, NodeInfo, testing tools и adapters под SvelteKit/Postgres/Redis.
+Go remains a strong candidate for a low-RAM self-host server. But after fact-checking, we cannot claim that go-fed is "actively maintained": the latest tagged release v1.0.0 was in 2020; the repository is mature/stable but low-activity. As of 2026, Fedify appears to be an actively developed framework covering WebFinger, HTTP Signatures, HTTP Message Signatures, NodeInfo, testing tools, and adapters for SvelteKit/Postgres/Redis.
 
-## Why Go (если ADR подтвердит Go)
+## Why Go (if the ADR confirms Go)
 
 ### Go vs Ruby (Mastodon stack)
-- Mastodon: Rails + Sidekiq + Redis + ElasticSearch = 4-6 GB RAM minimum для instance
-- Go + PostgreSQL = 300-500 MB RAM для аналогичной функциональности
-- Self-host UX: Mastodon требует Ruby runtime, bundler, nodejs для asset compilation. Go = одна бинарька.
+- Mastodon: Rails + Sidekiq + Redis + ElasticSearch = 4-6 GB RAM minimum per instance
+- Go + PostgreSQL = 300-500 MB RAM for comparable functionality
+- Self-host UX: Mastodon requires Ruby runtime, bundler, and nodejs for asset compilation. Go = a single binary.
 
 ### Go vs Elixir (Pleroma/Bonfire stack)
-- Elixir отличный для concurrency, но:
-  - Меньше разработчиков (barrier для контрибьюторов)
-  - Phoenix release tooling сложнее для beginners
+- Elixir is excellent for concurrency, but:
+  - Smaller developer pool (barrier for contributors)
+  - Phoenix release tooling is harder for beginners
   - BEAM VM RAM footprint > Go binary
-- GoToSocial на Go vs Pleroma на Elixir = GoToSocial выиграл "easiest self-host"
+- GoToSocial (Go) vs Pleroma (Elixir): GoToSocial won "easiest self-host"
 
 ### Go vs Node.js (Fedify/TypeScript)
-- Node.js не выполняет CPU-bound geo work так эффективно как Go, но основная geo-нагрузка всё равно в PostGIS.
-- Node RAM consumption обычно выше, но для MVP это может быть приемлемой ценой за быстрее собранную federation layer.
-- Fedify теперь реальная альтернатива, а не просто "новый проект": он закрывает много Fediverse boilerplate из коробки.
-- Если выбираем Go, нужно либо принять maintenance risk go-fed, либо писать часть federation glue самостоятельно.
+- Node.js does not handle CPU-bound geo work as efficiently as Go, though the main geo workload lives in PostGIS anyway.
+- Node RAM consumption is typically higher, but for an MVP this may be an acceptable price for a faster-built federation layer.
+- Fedify is now a real alternative, not just a "new project": it covers a lot of Fediverse boilerplate out of the box.
+- If we pick Go, we must either accept the maintenance risk of go-fed or write part of the federation glue ourselves.
 
-### Go vs PHP (Pixelfed/Laravel — текущий [operator instance] стек)
-- PHP-FPM + nginx + OPcache — сложнее для turnkey deployment
-- Memory footprint выше
-- Нет готовой "good" ActivityPub library для PHP (landrok/activitypub существует, но меньше чем go-fed)
-- [operator instance] PHP подход работает для нас как consumers — но не как federated instance
+### Go vs PHP (Pixelfed/Laravel — the current [operator instance] stack)
+- PHP-FPM + nginx + OPcache is harder for turnkey deployment
+- Memory footprint is higher
+- No well-maintained ActivityPub library for PHP (landrok/activitypub exists but is smaller than go-fed)
+- The [operator instance] PHP approach works for us as consumers, but not as a federated instance
 
 ### Go vs Rust (Lemmy stack)
-- Rust дает лучший performance, но:
-  - Compile time — медленно для developer iteration
-  - Learning curve = barrier для контрибьюторов
-  - Ecosystem для ActivityPub + geo — меньше чем в Go
-- Для 100-10k users перформанс Go достаточен
+- Rust gives better performance, but:
+  - Compile times — slow for developer iteration
+  - Learning curve = barrier for contributors
+  - Ecosystem for ActivityPub + geo is smaller than Go's
+- For 100-10k users, Go's performance is sufficient
 
-### Итого: Go — оптимальный trade-off
-- Performance ✅ (достаточно)
-- Self-host simplicity ✅ (GoToSocial доказал)
-- Developer pool ✅ (больше чем Elixir/Rust)
+### Bottom line: Go is the optimal trade-off
+- Performance ✅ (sufficient)
+- Self-host simplicity ✅ (GoToSocial proved it)
+- Developer pool ✅ (larger than Elixir/Rust)
 - ActivityPub libraries ⚠️ (go-fed mature but low-activity; Fedify active but TypeScript)
-- Concurrency ✅ (горутины нативно)
+- Concurrency ✅ (goroutines are native)
 
 ## Why PostgreSQL + PostGIS
 
-### Альтернативы рассмотрены
+### Alternatives considered
 
-| Альтернатива | Почему отвергнута |
+| Alternative | Why rejected |
 |---|---|
-| **SQLite** | Для 10-50 users OK, не масштабируется на 10k+ |
-| **MySQL spatial** | Weaker geo-support чем PostGIS |
-| **MongoDB + geo** | NoSQL не подходит для relational federation data |
-| **Отдельный GIS server** (GeoServer) | Overkill, extra dependency |
+| **SQLite** | OK for 10-50 users, does not scale to 10k+ |
+| **MySQL spatial** | Weaker geo-support than PostGIS |
+| **MongoDB + geo** | NoSQL is a poor fit for relational federation data |
+| **Separate GIS server** (GeoServer) | Overkill, extra dependency |
 
-### Преимущества PostgreSQL+PostGIS
-- 15+ лет maturity
-- KNN queries нативно (ST_Distance + ORDER BY)
-- Индексы GIST для fast bbox queries
-- PostGIS ST_ClusterDBSCAN для дедупа POI
-- Hot standby + replication built-in
-- JSON columns (jsonb) для flexibility
+### Advantages of PostgreSQL+PostGIS
+- 15+ years of maturity
+- Native KNN queries (ST_Distance + ORDER BY)
+- GIST indexes for fast bbox queries
+- PostGIS ST_ClusterDBSCAN for POI dedup
+- Built-in hot standby + replication
+- JSON columns (jsonb) for flexibility
 
-### Ограничения
-- Для 10M+ POIs может требоваться sharding — не в scope Phase 1-5
-- PostGIS = heavy extension (1-2 GB disk footprint с data)
+### Limitations
+- For 10M+ POIs, sharding may be required — out of scope for Phases 1-5
+- PostGIS is a heavy extension (1-2 GB disk footprint with data)
 
-## Why Centrifugo (не native WebSocket / Soketi / Phoenix)
+## Why Centrifugo (not native WebSocket / Soketi / Phoenix)
 
-### Что делает Centrifugo
-Standalone WebSocket pub/sub server написан на Go. Отдельный процесс, интегрируется через HTTP API.
+### What Centrifugo does
+A standalone WebSocket pub/sub server written in Go. A separate process, integrated via an HTTP API.
 
-### Почему выбран
+### Why it was chosen
 
-| Критерий | Native Go WS | Centrifugo | Soketi | Phoenix Channels |
+| Criterion | Native Go WS | Centrifugo | Soketi | Phoenix Channels |
 |---|---|---|---|---|
 | RAM | ~100 MB | ~50 MB | ~200 MB | ~300 MB (BEAM) |
 | Language | Go | Standalone | Node.js | Elixir |
-| Integration | Встроен | HTTP API | Pusher-compat | Phoenix-only |
+| Integration | Embedded | HTTP API | Pusher-compat | Phoenix-only |
 | Scalability | Manual | Built-in | OK | Excellent |
 | Production | Medium | High | Medium | High |
 
-Centrifugo выигрывает: **standalone binary**, **proven scalability**, **language-agnostic**, **low RAM**. Отделение real-time от core логики = lower blast radius когда WebSocket component fails.
+Centrifugo wins on: **standalone binary**, **proven scalability**, **language-agnostic**, **low RAM**. Separating real-time from core logic = lower blast radius when the WebSocket component fails.
 
-## Why Protomaps PMTiles (не OpenMapTiles / tile servers)
+## Why Protomaps PMTiles (not OpenMapTiles / tile servers)
 
-### Проблема классических tile servers
-- OpenMapTiles требует PostgreSQL + tilelive-server stack
-- Каждая подгрузка tile = HTTP request
-- Stale tiles после обновления данных
+### The problem with classic tile servers
+- OpenMapTiles requires a PostgreSQL + tilelive-server stack
+- Every tile fetch = an HTTP request
+- Stale tiles after data updates
 
-### Protomaps PMTiles подход
-- **Один файл** `.pmtiles` содержит vector tiles и читается через HTTP range requests
-- Full planet Protomaps basemap z0-z15 на 2026 — порядка **120 GB**, не 1-2 GB
-- Для дешёвого self-host default нужен regional extract или reduced maxzoom tileset
-- Serverless: файл на S3/CDN, клиент читает напрямую через HTTP range requests
-- MapLibre GL JS работает с PMTiles через `pmtiles` JS plugin и `addProtocol("pmtiles", ...)`
-- Нет tile server infrastructure вообще
-- Offline-capable после первой загрузки
+### The Protomaps PMTiles approach
+- **A single `.pmtiles` file** holds vector tiles and is read via HTTP range requests
+- The full-planet Protomaps basemap z0-z15 as of 2026 is roughly **120 GB**, not 1-2 GB
+- A cheap self-host default needs a regional extract or a reduced-maxzoom tileset
+- Serverless: the file sits on S3/CDN, the client reads it directly via HTTP range requests
+- MapLibre GL JS works with PMTiles via the `pmtiles` JS plugin and `addProtocol("pmtiles", ...)`
+- No tile server infrastructure at all
+- Offline-capable after the first load
 
-### Альтернативы
-- **OpenMapTiles** — self-host, полный tile server (overkill для large majority use cases)
-- **Mapbox Studio** — закрытая, API key limits
-- **Google Maps** — закрытая, expensive API
-- **Stamen Toner/Terrain** — устарели, проект заморожен
+### Alternatives
+- **OpenMapTiles** — self-host, full tile server (overkill for the large majority of use cases)
+- **Mapbox Studio** — closed, API key limits
+- **Google Maps** — closed, expensive API
+- **Stamen Toner/Terrain** — outdated, project frozen
 
-Для нашего use case Protomaps PMTiles — идеален.
+Protomaps PMTiles is ideal for our use case.
 
-## Why MapLibre GL JS (не Leaflet / OpenLayers)
+## Why MapLibre GL JS (not Leaflet / OpenLayers)
 
-| Критерий | MapLibre GL JS | Leaflet | OpenLayers |
+| Criterion | MapLibre GL JS | Leaflet | OpenLayers |
 |---|---|---|---|
-| Vector tiles | ✅ Native | ❌ (нужен plugin) | ✅ |
+| Vector tiles | ✅ Native | ❌ (needs plugin) | ✅ |
 | WebGL rendering | ✅ | ❌ (canvas) | ✅ |
-| 3D terrain | ✅ | ❌ | Частично |
-| PMTiles | ✅ Через `pmtiles` protocol plugin | Plugin | Plugin |
+| 3D terrain | ✅ | ❌ | Partial |
+| PMTiles | ✅ Via `pmtiles` protocol plugin | Plugin | Plugin |
 | Bundle size | ~800 KB | ~150 KB | ~500 KB |
-| Maturity | High (fork Mapbox) | Very high | Very high |
+| Maturity | High (Mapbox fork) | Very high | Very high |
 | Customization | Style JSON spec | jQuery-like API | Object-oriented |
 
-MapLibre выигрывает по features (vector, WebGL, PMTiles), хотя bundle size больше. Для serious map app это оправдано.
+MapLibre wins on features (vector, WebGL, PMTiles), even though the bundle is larger. For a serious map app this is justified.
 
-[operator instance] уже использует MapLibre — консистентность подходов.
+[operator instance] already uses MapLibre — consistency of approach.
 
-## Why SvelteKit (не Next.js / Nuxt / plain HTML)
+## Why SvelteKit (not Next.js / Nuxt / plain HTML)
 
 ### Sizing
-- Next.js bundle (минимальный): ~150 KB
-- SvelteKit bundle (минимальный): ~30 KB
-- Для mobile users (travelers на слабом 4G) — важно
+- Next.js bundle (minimal): ~150 KB
+- SvelteKit bundle (minimal): ~30 KB
+- Matters for mobile users (travelers on poor 4G)
 
 ### SSR
-- Оба SvelteKit и Next.js делают SSR
-- Svelte компилируется в vanilla JS → runtime performance лучше
-- Public pages (place/POI pages) SEO-ready
+- Both SvelteKit and Next.js do SSR
+- Svelte compiles to vanilla JS → better runtime performance
+- Public pages (place/POI pages) are SEO-ready
 
 ### Developer experience
-- Svelte syntax ближе к HTML/CSS/JS без abstract concepts
-- Меньше "magic" чем React Query/Redux
+- Svelte syntax is closer to HTML/CSS/JS without abstract concepts
+- Less "magic" than React Query/Redux
 - Simpler state management (stores)
 
-### Альтернативы
-- **Vanilla HTML + MapLibre** — работает но сложно для интерактивности (social timeline, real-time)
-- **React/Next.js** — heavy, лучше известен но overkill
-- **HTMX + MapLibre** — интересный подход, но WebSocket/maps интеграция сложнее
+### Alternatives
+- **Vanilla HTML + MapLibre** — works, but hard for interactivity (social timeline, real-time)
+- **React/Next.js** — heavy, better known but overkill
+- **HTMX + MapLibre** — an interesting approach, but WebSocket/maps integration is harder
 
-## Why go-fed/activity (не Fedify / свой код)
+## Why go-fed/activity (not Fedify / rolling our own)
 
 ### go-fed/activity
-- Reference-quality ActivityPub/ActivityStreams library в Go
-- Supports W3C AS Vocabulary
-- Latest tagged release v1.0.0 от 2020; repo mature, но maintenance activity низкая
-- Использовалась в production-проектах, но перед выбором нужен fresh spike и issue review
+- Reference-quality ActivityPub/ActivityStreams library in Go
+- Supports the W3C AS Vocabulary
+- Latest tagged release v1.0.0 from 2020; the repo is mature but maintenance activity is low
+- Used in production projects, but a fresh spike and issue review are required before committing
 
-### Fedify (альтернатива)
-- TypeScript/JavaScript — не Go, но хорошо сочетается со SvelteKit и быстрым прототипированием
-- Активно развивается; включает WebFinger, HTTP Signatures, HTTP Message Signatures, NodeInfo, testing/debug tools
-- Может быть лучшим выбором для Phase 1, если цель — быстрее получить совместимый ActivityPub MVP
+### Fedify (alternative)
+- TypeScript/JavaScript — not Go, but pairs well with SvelteKit and rapid prototyping
+- Actively developed; includes WebFinger, HTTP Signatures, HTTP Message Signatures, NodeInfo, and testing/debug tools
+- May be the better choice for Phase 1 if the goal is a compatible ActivityPub MVP sooner
 
-### Свой код с нуля
-- Overkill для MVP — ActivityPub сложный (HTTP Signatures, JSON-LD, WebFinger, WebSocket for streaming)
-- Лучше build on top of выбранного framework, extend только где нужно
+### Rolling our own
+- Overkill for an MVP — ActivityPub is complex (HTTP Signatures, JSON-LD, WebFinger, WebSocket for streaming)
+- Better to build on top of the chosen framework and extend only where needed
 
 ## Resource footprint estimates
 
@@ -199,48 +199,48 @@ MapLibre выигрывает по features (vector, WebGL, PMTiles), хотя b
 - Centrifugo: 50 MB RAM
 - Meilisearch (optional): 200 MB RAM
 - **Total:** ~2 GB RAM, 2 vCPU, 50 GB disk
-- **Cost:** ~$10-15/мес VPS (Hetzner CX22, DO 2GB droplet)
+- **Cost:** ~$10-15/month VPS (Hetzner CX22, DO 2GB droplet)
 
 ### 1,000 users
 - Go binary: 500 MB
 - PostgreSQL: 3 GB (tune shared_buffers, work_mem)
 - Centrifugo: 150 MB
 - **Total:** ~4 GB RAM, 4 vCPU, 200 GB disk
-- **Cost:** ~$30/мес
+- **Cost:** ~$30/month
 
 ### 10,000 users
-- Scale-out: master + 2 replicas Postgres
+- Scale-out: master + 2 Postgres replicas
 - Centrifugo cluster (2-3 nodes)
-- Go binary: можно оставить single (or scale horizontally)
-- **Cost:** ~$150-300/мес
+- Go binary: can remain single (or scale horizontally)
+- **Cost:** ~$150-300/month
 
 ### Masterless micro-instance (family/small group, 5-10 users)
-- Можно запустить на Raspberry Pi 4 (4 GB):
-  - SQLite вместо PostgreSQL (Go поддерживает через modernc.org/sqlite)
-  - Regional PMTiles file или reduced maxzoom tileset на SD карте
-  - Без Meilisearch (PostgreSQL FTS)
+- Can run on a Raspberry Pi 4 (4 GB):
+  - SQLite instead of PostgreSQL (Go supports it via modernc.org/sqlite)
+  - Regional PMTiles file or reduced-maxzoom tileset on an SD card
+  - No Meilisearch (PostgreSQL FTS)
 - **Cost:** electricity only
 
-## Trade-offs мы принимаем
+## Trade-offs we accept
 
-- **Нет satellite imagery** — только vector tiles (Protomaps)
-- **Geocoding — только через external Nominatim или ограниченный self-host** (full planet Nominatim на 2026: около 1 TB disk, 128 GB RAM strongly recommended)
-- **Routing опционально** (OSRM self-host = 2 GB per region), не встроено в core
-- **Нет iOS/Android native apps в Phase 1-4** — PWA first
+- **No satellite imagery** — vector tiles only (Protomaps)
+- **Geocoding — only via external Nominatim or a limited self-host** (full-planet Nominatim in 2026: about 1 TB disk, 128 GB RAM strongly recommended)
+- **Routing is optional** (OSRM self-host = 2 GB per region), not built into the core
+- **No native iOS/Android apps in Phases 1-4** — PWA first
 
 ---
 
-## Fact-check questions для агентов
+## Fact-check questions for agents
 
-1. **Backend ADR:** Go/go-fed vs TypeScript/Fedify spike — что быстрее и надёжнее для MVP?
-2. **PostGIS:** актуальная стабильная версия на 2026 (3.4 или выше)?
-3. **Centrifugo:** проверить что v5 стабильна. Есть ли v6?
-4. **Protomaps PMTiles:** есть ли мировой PMTiles файл to download? Размер актуальный (~120 GB full planet или иной)?
-5. **MapLibre GL JS:** последняя версия? PMTiles protocol поддержка через `pmtiles` plugin?
-6. **Nominatim self-host:** full planet requirements (1 TB disk, 128 GB RAM recommended) — подтвердить по актуальной версии docs.
-7. **SvelteKit:** версия на 2026? Лучше чем Next.js для bundle size?
-8. **Meilisearch:** лицензия MIT — подтвердить.
-9. **Resource estimates:** 2 GB RAM для 100 users — реалистично? Сравнить с реальными GoToSocial deployments.
-10. **Mastodon instance:** сколько RAM реально требует?
-11. **Docker image size:** сколько примерно будет weigh готовый TrailFed Docker image?
-12. **Fedify vs go-fed:** какой стек выбрать после spike? Не считать go-fed default без проверки maintenance/interoperability.
+1. **Backend ADR:** Go/go-fed vs TypeScript/Fedify spike — which is faster and more reliable for the MVP?
+2. **PostGIS:** current stable version in 2026 (3.4 or later)?
+3. **Centrifugo:** confirm that v5 is stable. Is there a v6?
+4. **Protomaps PMTiles:** is there a worldwide PMTiles file to download? Current size (~120 GB full planet or different)?
+5. **MapLibre GL JS:** latest version? PMTiles protocol support via the `pmtiles` plugin?
+6. **Nominatim self-host:** full-planet requirements (1 TB disk, 128 GB RAM recommended) — confirm against current docs.
+7. **SvelteKit:** version in 2026? Better than Next.js for bundle size?
+8. **Meilisearch:** MIT license — confirm.
+9. **Resource estimates:** 2 GB RAM for 100 users — realistic? Compare to real GoToSocial deployments.
+10. **Mastodon instance:** how much RAM does it actually require?
+11. **Docker image size:** roughly how large will the finished TrailFed Docker image be?
+12. **Fedify vs go-fed:** which stack do we choose after the spike? Do not treat go-fed as the default without verifying maintenance/interoperability.

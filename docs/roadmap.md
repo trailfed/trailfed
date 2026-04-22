@@ -1,5 +1,5 @@
 ---
-title: Roadmap и фазы реализации
+title: Roadmap and Implementation Phases
 version: 0.2
 status: draft
 updated: 2026-04-22
@@ -7,32 +7,32 @@ updated: 2026-04-22
 
 # 09. Roadmap
 
-## Обзор после fact-check
+## Overview after fact-check
 
-Первоначальный roadmap был слишком плотным: full Mastodon-compatible server + POI federation + maps + live location + travel tracks за 15-18 месяцев для 1-2 devs имеет высокий delivery risk.
+The initial roadmap was too packed: a full Mastodon-compatible server + POI federation + maps + live location + travel tracks in 15-18 months for 1-2 devs carries high delivery risk.
 
-Обновлённая стратегия: сначала доказать **travel POI federation + map-first UX**, а live location вынести за v1.0 как high-risk future capability.
+Updated strategy: first prove out **travel POI federation + map-first UX**, and push live location beyond v1.0 as a high-risk future capability.
 
-| Фаза | Длительность | Ключевая цель |
+| Phase | Duration | Key goal |
 |---|---|---|
-| 0 | Недели 1-8 | Spec, ADRs, naming, community |
-| 1 | Месяцы 3-5 | Federation foundation + backend ADR |
-| 2 | Месяцы 6-9 | Places MVP + OSM import + moderation |
-| 3 | Месяцы 10-12 | Map-first web client + public beta |
-| 4 | Месяцы 13-16 | Check-ins, reviews, travel tracks |
-| 5 | Месяцы 17-24 | Turnkey polish, security review, v1.0 |
-| 6 | После v1.0 | Ecosystem, hosting, optional live location research |
+| 0 | Weeks 1-8 | Spec, ADRs, naming, community |
+| 1 | Months 3-5 | Federation foundation + backend ADR |
+| 2 | Months 6-9 | Places MVP + OSM import + moderation |
+| 3 | Months 10-12 | Map-first web client + public beta |
+| 4 | Months 13-16 | Check-ins, reviews, travel tracks |
+| 5 | Months 17-24 | Turnkey polish, security review, v1.0 |
+| 6 | After v1.0 | Ecosystem, hosting, optional live location research |
 
-**Реалистичная цель:** 6 месяцев до technical MVP, 12 месяцев до usable public beta, 18-24 месяца до v1.0 без live location.
+**Realistic target:** 6 months to a technical MVP, 12 months to a usable public beta, 18-24 months to v1.0 without live location.
 
-## Phase 0 — Spec & Community (Недели 1-8)
+## Phase 0 — Spec & Community (Weeks 1-8)
 
-**Scope:** документация, fact-checking, ADRs, протокол. Минимальные spikes допустимы только для выбора стека.
+**Scope:** documentation, fact-checking, ADRs, protocol. Minimal spikes are allowed only to pick the stack.
 
 ### Deliverables
 
-- [ ] Финальная проверка названия/domain/trademark
-- [ ] GitHub org/repo после name decision
+- [ ] Final name/domain/trademark check
+- [ ] GitHub org/repo after the naming decision
 - [ ] Landing page
 - [ ] ADR-001: Backend stack — Go/go-fed vs TypeScript/Fedify
 - [ ] ADR-002: ActivityPub + GeoSocial compatibility profile
@@ -55,12 +55,12 @@ updated: 2026-04-22
 
 - Backend ADR accepted
 - Federation profile reviewed by at least 2 ActivityPub/Fediverse people
-- OSM/ODbL boundary reviewed by OSM-savvy contributor
+- OSM/ODbL boundary reviewed by an OSM-savvy contributor
 - No blocker issue in naming/trademark
 
-## Phase 1 — Federation Foundation (Месяцы 3-5)
+## Phase 1 — Federation Foundation (Months 3-5)
 
-**Scope:** минимальный ActivityPub-compatible server foundation. Не строим полный Mastodon clone.
+**Scope:** a minimal ActivityPub-compatible server foundation. We are not building a full Mastodon clone.
 
 ### Deliverables
 
@@ -90,9 +90,9 @@ updated: 2026-04-22
 - Signed activity can be exchanged with a test peer
 - Basic follow with Mastodon/GoToSocial is tested where possible
 
-## Phase 2 — Places MVP (Месяцы 6-9)
+## Phase 2 — Places MVP (Months 6-9)
 
-**Scope:** POI как first-class objects, REST API, import pipeline, moderation.
+**Scope:** POIs as first-class objects, REST API, import pipeline, moderation.
 
 ### Deliverables
 
@@ -113,7 +113,7 @@ updated: 2026-04-22
 - Import 10k+ OSM-derived places for one test region
 - Duplicate detection catches obvious same-location POIs
 
-## Phase 3 — Map-First Web Beta (Месяцы 10-12)
+## Phase 3 — Map-First Web Beta (Months 10-12)
 
 **Scope:** usable PWA for browsing/searching/contributing POIs.
 
@@ -142,7 +142,7 @@ updated: 2026-04-22
 - One public OpenVan-backed instance runs for 30 days
 - Lighthouse/mobile usability passes basic thresholds
 
-## Phase 4 — Check-ins, Reviews, Travel Tracks (Месяцы 13-16)
+## Phase 4 — Check-ins, Reviews, Travel Tracks (Months 13-16)
 
 **Scope:** add social/travel value without real-time tracking.
 
@@ -150,7 +150,7 @@ updated: 2026-04-22
 
 - [ ] Check-in endpoint and UI
 - [ ] `Arrive`/`Leave` activities between TrailFed peers
-- [ ] Reviews with clear non-OSM license boundary
+- [ ] Reviews with a clear non-OSM license boundary
 - [ ] Quality tiers from source confidence + community verification
 - [ ] GPX upload/import
 - [ ] `Travel` activity for published tracks
@@ -160,16 +160,16 @@ updated: 2026-04-22
 ### Milestones
 
 - Check-in on instance A visible on instance B
-- Track upload published as ActivityStreams object
+- Track upload published as an ActivityStreams object
 - Quality tier visible in UI and API
 
-## Phase 5 — Turnkey v1.0 (Месяцы 17-24)
+## Phase 5 — Turnkey v1.0 (Months 17-24)
 
 **Scope:** production readiness for small/medium instances.
 
 ### Deliverables
 
-- [ ] One-command-ish installer, but avoid unsafe `curl | bash` as only path
+- [ ] One-command-ish installer, but avoid unsafe `curl | bash` as the only path
 - [ ] Backup/restore tooling
 - [ ] Health checks and metrics
 - [ ] Admin documentation
@@ -178,7 +178,7 @@ updated: 2026-04-22
 - [ ] Instance directory
 - [ ] Security hardening guide
 - [ ] Privacy/legal templates for admins
-- [ ] Third-party review or at least external security/privacy review
+- [ ] Third-party review or at least an external security/privacy review
 
 ### v1.0 definition
 
@@ -197,7 +197,7 @@ updated: 2026-04-22
 - OpenVan integration as consumer and reference instance
 - Tourism board / regional dataset imports
 - Native apps only if background location/tracks become core
-- Live location research only after dedicated safety audit
+- Live location research only after a dedicated safety audit
 
 ## Team assumptions
 
@@ -209,7 +209,7 @@ updated: 2026-04-22
 
 ## Timeline risks
 
-- Backend ADR chooses wrong library and forces rewrite
+- Backend ADR chooses the wrong library and forces a rewrite
 - ActivityPub interop edge cases
 - ODbL/data-license boundary mistakes
 - Moderation workload underestimated
@@ -219,12 +219,12 @@ updated: 2026-04-22
 
 ---
 
-## Fact-check questions для агентов
+## Fact-check questions for agents
 
-1. Реалистичен ли Phase 1 foundation за 3 месяца после backend ADR?
-2. Какой стек быстрее даст compatible ActivityPub MVP: Go/go-fed или TypeScript/Fedify?
-3. Сколько времени реально занимает PBF importer с osmium/osm2pgsql?
-4. 18-24 месяца до v1.0 без live location — реалистично для 1-2 maintainers?
-5. Кто может сделать external ActivityPub/security/privacy review и сколько это стоит?
-6. Какие criteria нужны, чтобы назвать POI federation "stable"?
-7. Нужно ли делать Mastodon API compatibility вообще, или достаточно ActivityPub + собственный REST API?
+1. Is a Phase 1 foundation in 3 months after the backend ADR realistic?
+2. Which stack yields a compatible ActivityPub MVP faster: Go/go-fed or TypeScript/Fedify?
+3. How long does a PBF importer with osmium/osm2pgsql actually take?
+4. 18-24 months to v1.0 without live location — realistic for 1-2 maintainers?
+5. Who can do an external ActivityPub/security/privacy review, and what does it cost?
+6. What criteria are needed to call POI federation "stable"?
+7. Do we need Mastodon API compatibility at all, or is ActivityPub + our own REST API enough?

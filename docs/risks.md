@@ -1,255 +1,255 @@
 ---
-title: Риски и митигации
+title: Risks and mitigations
 version: 0.1
 status: draft
 updated: 2026-04-22
 ---
 
-# 11. Риски и митигации
+# 11. Risks and mitigations
 
-Честный список что может пойти не так и что мы делаем чтобы уменьшить риск.
+An honest list of what can go wrong and what we are doing to reduce the risk.
 
-## R1: Stalking / preying через live location
+## R1: Stalking / preying via live location
 
-**Severity:** 🔴 Critical — может привести к физическому вреду.
+**Severity:** 🔴 Critical — can lead to physical harm.
 
-**Описание:** злоумышленник (ex-partner, stalker, abuser) использует live location для определения физического местоположения жертвы.
+**Description:** an attacker (ex-partner, stalker, abuser) uses live location to determine the victim's physical whereabouts.
 
 **Mitigation:**
-- Opt-in по умолчанию OFF (см. 08_PRIVACY_MODEL.md)
+- Opt-in, OFF by default (see 08_PRIVACY_MODEL.md)
 - 3 precision tiers (EXACT/CITY/COUNTRY)
 - Stealth mode kill-switch
 - Ghost delay (30 min default)
 - Fuzz radius (±500m)
-- Separate ACL для "кто видит live location" (не совпадает с followers)
-- No public geohash/nearby channels in MVP
+- Separate ACL for "who can see live location" (distinct from followers)
+- No public geohash / nearby channels in MVP
 - Live location deferred beyond v1.0 until safety review
-- Instance-level restrictions (admin может globally disable EXACT tier)
-- Panic mode для survivors
+- Instance-level restrictions (admins can globally disable the EXACT tier)
+- Panic mode for survivors
 
-**Residual risk:** some. Не нулевой — никакая technical mitigation не решает abuse problem fully. Education + admin policies critical.
+**Residual risk:** some. Not zero — no technical mitigation fully solves the abuse problem. Education + admin policies are critical.
 
-## R2: Scope creep — попытка сделать всё сразу
+## R2: Scope creep — trying to build everything at once
 
-**Severity:** 🟠 High — может убить project до v1.0.
+**Severity:** 🟠 High — can kill the project before v1.0.
 
-**Описание:** добавление features "ещё вот это было бы классно" удлиняет roadmap и разбрасывает focus.
-
-**Mitigation:**
-- 7 чётких фаз с scoping boundaries
-- Phase 1-3 самодостаточны (MVP = federation foundation + Places + map-first UI)
-- Live location explicitly out of v1.0 scope unless safety review approves it
-- Quarterly review: что добавили vs. плана?
-- Formal RFC process для major features
-- Maintainer authority отклонять out-of-scope contributions (без feelings hurt)
-
-**Residual risk:** medium. Community pressure — постоянный вектор.
-
-## R3: Moderation hell (как в Mastodon)
-
-**Severity:** 🟠 High — может отпугнуть users + admins.
-
-**Описание:** instance admins burning out из-за moderation workload. Harassment между instances. Toxic behavior.
+**Description:** adding "that would be cool too" features stretches the roadmap and scatters focus.
 
 **Mitigation:**
-- Каждый instance модерирует сам (distributed load)
+- 7 clearly defined phases with scoping boundaries
+- Phases 1–3 are self-sufficient (MVP = federation foundation + Places + map-first UI)
+- Live location explicitly out of v1.0 scope unless a safety review approves it
+- Quarterly review: what did we add vs. the plan?
+- Formal RFC process for major features
+- Maintainer authority to reject out-of-scope contributions (no hurt feelings)
+
+**Residual risk:** medium. Community pressure is a constant vector.
+
+## R3: Moderation hell (as in Mastodon)
+
+**Severity:** 🟠 High — can drive away both users and admins.
+
+**Description:** instance admins burn out under the moderation workload. Cross-instance harassment. Toxic behavior.
+
+**Mitigation:**
+- Each instance moderates itself (distributed load)
 - Defederation tools built-in
 - Reputation scoring per peer
-- Clear Code of Conduct templates для admins
-- Community support channels для admins
+- Clear Code of Conduct templates for admins
+- Community support channels for admins
 - Trust levels per peer (auto-graylist new peers)
 
-**Residual risk:** medium. Social problems не решаются чисто technical means.
+**Residual risk:** medium. Social problems are not solved by technical means alone.
 
 ## R4: Spam instances
 
 **Severity:** 🟡 Medium.
 
-**Описание:** злоумышленник поднимает instance, флудит fake POIs, fake check-ins, fake accounts.
+**Description:** an attacker stands up an instance and floods the network with fake POIs, check-ins, and accounts.
 
 **Mitigation:**
-- Graylist по умолчанию для new peers (moderation queue)
-- Rate limits на federated activities per peer
+- Graylist new peers by default (moderation queue)
+- Rate limits on federated activities per peer
 - Reputation scoring
 - Community blocklist sharing (like Mastodon's shared blocklists)
-- Geospatial fingerprint detects dup POIs
+- Geospatial fingerprinting to detect duplicate POIs
 
-**Residual risk:** low-medium. Well-established defense patterns.
+**Residual risk:** low–medium. Well-established defense patterns.
 
 ## R5: Duplicate POIs across federation
 
-**Severity:** 🟡 Medium — UX пробоема.
+**Severity:** 🟡 Medium — UX problem.
 
-**Описание:** 2 instances независимо создают POI для same location. Пользователи видят дубликаты на карте.
+**Description:** two instances independently create a POI for the same location. Users see duplicates on the map.
 
 **Mitigation:**
 - Geospatial fingerprint (sha256 of rounded lat/lng + category)
-- Merge activities для proposed merges
-- UI: "показать похожие POI" при create
-- Admin tools для bulk merge
-- `trailfed:canonical_uri` для linking aliases
+- Merge activities for proposed merges
+- UI: "show similar POIs" on create
+- Admin tools for bulk merge
+- `trailfed:canonical_uri` for linking aliases
 
 **Residual risk:** low. Ugly but not breaking.
 
 ## R6: ActivityPub implementation complexity
 
-**Severity:** 🟡 Medium — barrier для adoption.
+**Severity:** 🟡 Medium — a barrier to adoption.
 
-**Описание:** HTTP Signatures, JSON-LD, WebFinger, inbox processing — все это tricky. Implementation bugs breaking federation. Дополнительный риск: go-fed mature but low-activity, Fedify active but TypeScript/Node changes backend assumptions.
+**Description:** HTTP Signatures, JSON-LD, WebFinger, inbox processing — all of these are tricky. Implementation bugs break federation. An additional risk: go-fed is mature but low-activity, while Fedify is active but TypeScript/Node, which changes backend assumptions.
 
 **Mitigation:**
 - Phase 0 spike: Go/go-fed vs TypeScript/Fedify before committing
 - Federation test suite (automated)
-- Compatibility testing с Mastodon, Pleroma, GoToSocial
+- Compatibility testing with Mastodon, Pleroma, GoToSocial
 - Public interop fixtures and local test peers
-- Docs для instance admins о common issues
+- Docs for instance admins on common issues
 
-**Residual risk:** medium. Proven libraries help, but Fediverse interop is still implementation-specific.
+**Residual risk:** medium. Proven libraries help, but Fediverse interop remains implementation-specific.
 
 ## R7: Google/Apple background geolocation restrictions
 
 **Severity:** 🟠 High — fundamental constraint.
 
-**Описание:** Modern mobile browsers (Safari, Chrome) restrict background geolocation heavily. Travel tracks recording в PWA может быть unreliable.
+**Description:** modern mobile browsers (Safari, Chrome) restrict background geolocation heavily. Recording travel tracks in a PWA can be unreliable.
 
 **Mitigation:**
-- Explicit warning: "for full tracking, use native app (Phase 6)"
-- PWA works для foreground use (open app → track actively)
-- Background limitations documented прямо в UI
-- Phase 6: Native apps (iOS/Android) с proper background location permissions
+- Explicit warning: "for full tracking, use the native app (Phase 6)"
+- PWA works for foreground use (open the app → track actively)
+- Background limitations documented directly in the UI
+- Phase 6: native apps (iOS/Android) with proper background location permissions
 
-**Residual risk:** medium. Inherent OS constraint, only solvable with native.
+**Residual risk:** medium. An inherent OS constraint, only solvable with native.
 
 ## R8: GDPR / legal violations
 
-**Severity:** 🔴 Critical — can result in fines, legal action.
+**Severity:** 🔴 Critical — can result in fines and legal action.
 
-**Описание:** violation of GDPR (EU), CCPA (California), or other privacy laws. Potential €20M fines.
+**Description:** violation of GDPR (EU), CCPA (California), or other privacy laws. Potential €20M fines.
 
 **Mitigation:**
 - Privacy-by-design model (see 08_PRIVACY_MODEL.md)
-- Legal counsel reviews privacy policy (budgeted в grant)
+- Legal counsel reviews the privacy policy (budgeted in the grant)
 - Transparent data handling
 - Right-to-delete implemented
-- Data Processing Agreements (DPA) templates для admins
-- Jurisdictional awareness (instance admins responsible per jurisdiction)
+- Data Processing Agreement (DPA) templates for admins
+- Jurisdictional awareness (instance admins are responsible in their jurisdiction)
 
-**Residual risk:** medium. Each jurisdiction has own laws. Can't guarantee 100% compliance for every admin.
+**Residual risk:** medium. Each jurisdiction has its own laws. We cannot guarantee 100% compliance for every admin.
 
 ## R9: OSM community backlash
 
 **Severity:** 🟡 Medium — reputation risk.
 
-**Описание:** OSM community может воспринять нас как leeching (consume OSM, not contribute). Negative diary posts, social media.
+**Description:** the OSM community may perceive us as leeching (consuming OSM without contributing). Negative diary posts, social media criticism.
 
 **Mitigation:**
 - Additive philosophy clearly communicated
-- Regular contribution through user OAuth (Phase 4+)
-- Reports of data quality issues to OSM
-- Attend State of the Map conferences
-- Public blog posts about our OSM usage + contributions
+- Regular contributions via user OAuth (Phase 4+)
+- Reporting data quality issues back to OSM
+- Attending State of the Map conferences
+- Public blog posts about our OSM usage and contributions
 - iOverlander precedent (they cohabit successfully)
 
 **Residual risk:** low. Transparent behavior + communication address most concerns.
 
-## R10: GoToSocial / Bonfire / Fedify ecosystem делают то же быстрее
+## R10: GoToSocial / Bonfire / Fedify ecosystem does the same thing faster
 
 **Severity:** 🟡 Medium — competition.
 
-**Описание:** GoToSocial adds geo features. Bonfire finalizes geosocial extension. Fedify examples evolve into a geosocial server. TrailFed becomes less differentiated.
+**Description:** GoToSocial adds geo features. Bonfire finalizes a geosocial extension. Fedify examples evolve into a geosocial server. TrailFed becomes less differentiated.
 
 **Mitigation:**
-- Travel/overland focus differentiated от general-purpose
-- Cross-federation с обоими (they become peers, not competitors)
+- Travel/overland focus, differentiated from general-purpose platforms
+- Cross-federation with all of them (they become peers, not competitors)
 - Unique features: travel POI federation + map-first UX + OSM/import/moderation tooling
-- Community relationships — не winner-takes-all в Fediverse
-- Possible future merger если tactical aligns
+- Community relationships — the Fediverse is not winner-takes-all
+- Possible future merger if tactics align
 
-**Residual risk:** low. Fediverse is not zero-sum.
+**Residual risk:** low. The Fediverse is not zero-sum.
 
 ## R11: Solo-maintainer burnout
 
-**Severity:** 🟠 High — может привести к abandonment.
+**Severity:** 🟠 High — can lead to abandonment.
 
-**Описание:** lead maintainer (особенно в solo mode) burns out, проект замедляется или умирает.
+**Description:** the lead maintainer (especially in solo mode) burns out; the project slows down or dies.
 
 **Mitigation:**
-- Part-time start, не full-time immediately
-- Active contributor recruitment с Phase 1
+- Part-time start, not full-time immediately
+- Active contributor recruitment from Phase 1
 - Clear communication — "I can't respond to every issue"
 - Designated second maintainer before Phase 3
-- Documentation ensures project continues even if primary leaves
-- Funding для sustainability (not just surviving)
+- Documentation ensures the project continues even if the primary leaves
+- Funding for sustainability (not just survival)
 
-**Residual risk:** medium. Common OSS problem, requires ongoing management.
+**Residual risk:** medium. A common OSS problem that requires ongoing management.
 
 ## R12: Data quality issues (misleading POIs)
 
 **Severity:** 🟡 Medium — can cause real-world problems.
 
-**Описание:** user posts POI at dangerous/wrong location. Another user arrives, gets in trouble.
+**Description:** a user posts a POI at a dangerous or wrong location. Another user arrives and gets into trouble.
 
 **Mitigation:**
-- Quality tiers (0-3) clearly displayed
+- Quality tiers (0–3) clearly displayed
 - `tier 0 = unverified` badge always visible
-- Reports/flagging mechanism
-- Time-based decay: POIs not visited в 18+ months flagged as `needs_verification`
-- Community moderation: multiple independent verifications boost tier
+- Reporting / flagging mechanism
+- Time-based decay: POIs not visited in 18+ months flagged as `needs_verification`
+- Community moderation: multiple independent verifications boost the tier
 - Terms of Use disclaimer
 
-**Residual risk:** medium. Physical world hazards beyond our control.
+**Residual risk:** medium. Physical-world hazards are beyond our control.
 
-## R13: Legal liability для instance admins
+## R13: Legal liability for instance admins
 
-**Severity:** 🟠 High — admins могут face legal action.
+**Severity:** 🟠 High — admins may face legal action.
 
-**Описание:** User posts illegal content (stalking, defamation, illegal POI). Admin потенциально liable в some jurisdictions.
+**Description:** a user posts illegal content (stalking, defamation, illegal POI). The admin may be liable in some jurisdictions.
 
 **Mitigation:**
 - Clear Terms of Use templates
-- Notice-and-takedown procedures documented
+- Documented notice-and-takedown procedures
 - Admin can defederate abusive peers
-- Legal counsel consult в grant budget
-- Jurisdictional advice in docs ("this is not legal advice, consult local lawyer")
+- Legal counsel consultation in the grant budget
+- Jurisdictional advice in docs ("this is not legal advice, consult a local lawyer")
 
-**Residual risk:** medium. Depends heavily on jurisdiction.
+**Residual risk:** medium. Heavily dependent on jurisdiction.
 
 ## R14: Protocol fragmentation
 
 **Severity:** 🟡 Medium — ecosystem risk.
 
-**Описание:** другой project публикует incompatible "federated travel standard". Ecosystem splits.
+**Description:** another project publishes an incompatible "federated travel standard". The ecosystem splits.
 
 **Mitigation:**
-- First-mover advantage — publish spec early
-- Reuse W3C ActivityPub — не изобретаем свой
+- First-mover advantage — publish the spec early
+- Reuse W3C ActivityPub — we do not invent our own
 - Minimal extensions — easy compatibility
-- Active в swicg/geosocial W3C group
-- Cross-federate с любыми compatible projects
+- Active in the swicg/geosocial W3C group
+- Cross-federate with any compatible projects
 
-**Residual risk:** low. Precedent: ActivityPub уже unified social fediverse.
+**Residual risk:** low. Precedent: ActivityPub has already unified the social fediverse.
 
 ## R15: Server compromise → user data leak
 
 **Severity:** 🔴 Critical — privacy breach.
 
-**Описание:** instance server hacked, user data (including sensitive location history) leaked.
+**Description:** an instance server is hacked; user data (including sensitive location history) leaks.
 
 **Mitigation:**
 - Encryption at rest (configurable)
-- Minimal data retention (default 30 дней для location)
+- Minimal data retention (default 30 days for location)
 - Security audit pre-v1.0
 - Bug bounty program
 - Incident response plan documented
-- Users opted-in для high-precision data see clear warnings
+- Users opted in to high-precision data see clear warnings
 
-**Residual risk:** medium. All online services have this risk. We mitigate через minimal data + audits.
+**Residual risk:** medium. Every online service carries this risk. We mitigate through minimal data + audits.
 
-## R16: ODbL/license contamination
+## R16: ODbL / license contamination
 
-**Severity:** 🟠 High — может заблокировать adoption и вызвать legal conflict.
+**Severity:** 🟠 High — can block adoption and trigger legal conflict.
 
-**Описание:** OSM-derived data, user reviews, partner datasets и remote instance data смешиваются так, что невозможно понять license/attribution/share-alike obligations.
+**Description:** OSM-derived data, user reviews, partner datasets, and data from remote instances get mixed together in a way that makes it impossible to determine license / attribution / share-alike obligations.
 
 **Mitigation:**
 - `place_sources` / field-level provenance
@@ -258,21 +258,21 @@ updated: 2026-04-22
 - Reviews/check-ins licensed separately
 - Legal review before public data exports
 
-**Residual risk:** medium. ODbL нюансы сложные, нужен review.
+**Residual risk:** medium. ODbL nuances are complex and require review.
 
 ## R17: Overpass misuse / OSM infra abuse
 
 **Severity:** 🟡 Medium — reputation + reliability risk.
 
-**Описание:** initial import через public Overpass создаёт нагрузку, ломается на rate limits, вызывает негатив OSM community.
+**Description:** an initial import via the public Overpass API creates load, breaks on rate limits, and draws negative attention from the OSM community.
 
 **Mitigation:**
-- Bulk import только через PBF extracts
-- Overpass only small bbox/dev queries
-- Respect fair-use and 429
-- Document how to self-host importer
+- Bulk imports only via PBF extracts
+- Overpass used only for small bbox/dev queries
+- Respect fair-use and 429 responses
+- Document how to self-host the importer
 
-**Residual risk:** low если pipeline соблюдается.
+**Residual risk:** low if the pipeline is followed.
 
 ## Risk matrix
 
@@ -298,15 +298,15 @@ updated: 2026-04-22
 
 ---
 
-## Fact-check questions для агентов
+## Fact-check questions for agents
 
-1. Пропустили ли мы риски специфичные для federated platforms? (проверить Mastodon incident history)
-2. R1 Stalking — есть ли известные incident reports для location apps (Life360, Strava, Foursquare)? Patterns?
-3. R8 GDPR — какие конкретные fines были для federated services (если были)?
-4. R7 Background geolocation — Safari restrictions на 2026 какие?
-5. R13 Legal liability — какие notable cases для Mastodon admins?
-6. Матрица риск/probability — рacional ли scoring?
-7. Существуют ли другие критические риски которые мы не упомянули? (cryptocurrency abuse для anonymous stalking? AI-generated fake POIs?)
-8. R15 — есть ли precedent Mastodon instance breaches? Как они handled?
-9. R16 — какие реальные ODbL boundary cases наиболее опасны для mixed POI/review database?
-10. R17 — какие OSM импорт-guidelines нужно соблюдать для PBF/import pipeline?
+1. Did we miss risks specific to federated platforms? (check Mastodon's incident history)
+2. R1 Stalking — are there known incident reports for location apps (Life360, Strava, Foursquare)? Patterns?
+3. R8 GDPR — what specific fines have been levied against federated services (if any)?
+4. R7 Background geolocation — what are Safari's restrictions in 2026?
+5. R13 Legal liability — any notable cases involving Mastodon admins?
+6. The risk/probability matrix — is the scoring rational?
+7. Are there other critical risks we did not mention? (cryptocurrency abuse for anonymous stalking? AI-generated fake POIs?)
+8. R15 — is there precedent for Mastodon instance breaches? How were they handled?
+9. R16 — which real ODbL boundary cases are most dangerous for a mixed POI/review database?
+10. R17 — which OSM import guidelines must the PBF/import pipeline follow?

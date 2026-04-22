@@ -1,17 +1,55 @@
 node_modules/
 dist/
-.env
-.env.local
-*.log
-.DS_Store
-.vscode/
-.idea/
+build/
 coverage/
 .turbo/
 .svelte-kit/
-build/
 .pnpm-store/
+
+# Environment & secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+secrets/
+*.secret
+*.secrets
+docker-compose.override.yml
+
+# Private/internal working docs — not for public repo
+docs/internal/
+verify/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# AI assistant local state
+.claude/
+CLAUDE.local.md
+.cursor/
+.aider*
+
+# Logs & temp
+*.log
+logs/
+tmp/
+.tmp/
+*.bak
+*.orig
 
 # Local state
 infra/pmtiles/*.pmtiles
 infra/postgres/data/
+infra/**/data/

@@ -1,13 +1,13 @@
 ---
-title: Архитектура TrailFed
+title: TrailFed Architecture
 version: 0.1
 status: draft
 updated: 2026-04-22
 ---
 
-# 05. Детальная архитектура
+# 05. Detailed Architecture
 
-## Высокоуровневая схема
+## High-level diagram
 
 ```
                   ┌────────────────────────────────────┐
@@ -40,47 +40,47 @@ updated: 2026-04-22
          └──────────────────────────────┘
 ```
 
-## Компоненты и их ответственности
+## Components and their responsibilities
 
 ### TrailFed Core (monolith)
 - HTTP REST API
 - ActivityPub inbox/outbox/WebFinger
 - Mastodon-API compatibility layer (optional; not required for POI MVP)
-- Authentication (OAuth2 + HTTP Signatures для S2S)
-- Database access (через sqlx или GORM)
-- Фоновые задачи (implementation depends on backend ADR)
+- Authentication (OAuth2 + HTTP Signatures for S2S)
+- Database access (via sqlx or GORM)
+- Background jobs (implementation depends on backend ADR)
 - OSM import pipeline
 
-Backend language/framework фиксируется через ADR после spike: Go/go-fed или TypeScript/Fedify. Архитектура ниже не зависит принципиально от языка.
+The backend language/framework is locked in via an ADR after the spike: Go/go-fed or TypeScript/Fedify. The architecture below is not fundamentally language-dependent.
 
 ### Centrifugo
-- WebSocket connections от клиентов
-- Pub/sub channels для real-time событий
-- Connection token verification через TrailFed Core
-- Channels (Phase 4+, не MVP):
-  - `user:<actor_id>` — private: статус подписчиков, DM
-  - `place:<place_id>:live` — кто сейчас check-in в этом POI, если instance включил feature
-- Не используем public `location:<geohash>` channels в MVP. Даже coarse geohash может раскрывать опасную информацию в rural areas.
+- WebSocket connections from clients
+- Pub/sub channels for real-time events
+- Connection token verification via TrailFed Core
+- Channels (Phase 4+, not MVP):
+  - `user:<actor_id>` — private: follower status, DMs
+  - `place:<place_id>:live` — who is currently checked in at the POI, if the instance enables the feature
+- We do not use public `location:<geohash>` channels in the MVP. Even a coarse geohash can leak dangerous information in rural areas.
 
 ### PostgreSQL + PostGIS
-- Все persistent данные
-- Геопространственные индексы (GIST)
-- Full-text search (если Meilisearch не используется)
+- All persistent data
+- Geospatial indexes (GIST)
+- Full-text search (if Meilisearch is not used)
 
-### Redis (optional, для кеша)
-- Сессии (если не JWT)
-- Rate limiting (фиксированные окна)
-- Временные данные live location (TTL 5 мин)
+### Redis (optional, for cache)
+- Sessions (if not JWT)
+- Rate limiting (fixed windows)
+- Transient live-location data (TTL 5 min)
 
 ### Protomaps PMTiles (static file)
-- Размещается на S3-compatible storage или локально
-- MapLibre GL JS читает через HTTP range requests
-- Обновляется daily/monthly depending source; default self-host setup использует regional extract или reduced maxzoom, потому что full planet basemap z0-z15 около 120 GB
+- Hosted on S3-compatible storage or locally
+- MapLibre GL JS reads it via HTTP range requests
+- Updated daily/monthly depending on the source; the default self-host setup uses a regional extract or a reduced maxzoom, because the full-planet basemap z0-z15 is about 120 GB
 
-## Схема базы данных (ключевые таблицы)
+## Database schema (key tables)
 
 ```sql
--- Actors (локальные и remote через federation)
+-- Actors (local and remote via federation)
 CREATE TABLE actors (
     id BIGSERIAL PRIMARY KEY,
     uri TEXT UNIQUE NOT NULL,            -- https://instance.com/actors/alice
@@ -101,7 +101,7 @@ CREATE TABLE actors (
     UNIQUE(username, domain)
 );
 
--- Places (POI как ActivityPub objects)
+-- Places (POIs as ActivityPub objects)
 CREATE TABLE places (
     id BIGSERIAL PRIMARY KEY,
     uri TEXT UNIQUE NOT NULL,            -- https://instance.com/places/uuid
@@ -151,7 +151,7 @@ CREATE TABLE place_sources (
 );
 CREATE INDEX place_sources_place_idx ON place_sources(place_id);
 
--- Activities (полная история для federation)
+-- Activities (full history for federation)
 CREATE TABLE activities (
     id BIGSERIAL PRIMARY KEY,
     uri TEXT UNIQUE NOT NULL,
@@ -159,7 +159,7 @@ CREATE TABLE activities (
     actor_id BIGINT REFERENCES actors(id),
     object_uri TEXT,                     -- URI of target object
     object_type VARCHAR(50),             -- Place, Note, Actor
-    target_uri TEXT,                     -- для Announce, Move
+    target_uri TEXT,                     -- for Announce, Move
     data JSONB NOT NULL,                 -- full JSON-LD activity
     published_at TIMESTAMPTZ NOT NULL,
     signature TEXT,
@@ -167,7 +167,7 @@ CREATE TABLE activities (
 );
 CREATE INDEX activities_actor_type_idx ON activities(actor_id, type);
 
--- Notes (соц посты)
+-- Notes (social posts)
 CREATE TABLE notes (
     id BIGSERIAL PRIMARY KEY,
     uri TEXT UNIQUE NOT NULL,
@@ -237,7 +237,7 @@ CREATE INDEX live_locations_geom_idx ON live_locations USING GIST(geom);
 
 ## API endpoints
 
-### REST API для клиентов
+### REST API for clients
 
 ```
 GET    /api/v1/places                    — bbox query
@@ -251,7 +251,7 @@ POST   /api/v1/places/{id}/reviews
 
 GET    /api/v1/timelines/home            — Mastodon-API compat
 GET    /api/v1/timelines/public
-GET    /api/v1/timelines/location        — новое: геофенсед
+GET    /api/v1/timelines/location        — new: geofenced
 POST   /api/v1/statuses
 GET    /api/v1/accounts/{id}
 GET    /api/v1/accounts/verify_credentials
@@ -299,7 +299,7 @@ User (browser) → POST /api/v1/places
   → INSERT INTO activities
   → enqueue federation.DeliverJob
   → goroutine pool:
-    → для каждого follower peer:
+    → for each follower peer:
       → POST peer.inbox_url with signed Activity
   → return 201 Created to user
 ```
@@ -314,7 +314,7 @@ User → POST /api/v1/places/{id}/checkin
   → optional: create Note with check-in context
   → federation delivery (same as #1)
   → Centrifugo.publish("user:{follower_id}", event)
-    → real-time update в followers' timelines
+    → real-time update in followers' timelines
 ```
 
 ### 3. Live location broadcast (Phase 4+, not MVP)
@@ -324,7 +324,7 @@ User's phone (PWA) → WSS publish to "user:{user_id}"
   → Centrifugo routes
   → server-side verify: did user opt-in? precision tier OK?
   → UPSERT INTO live_locations
-  → fan-out только в explicit allowlist:
+  → fan-out only to an explicit allowlist:
     → selected trusted followers get allowed precision
     → no public geohash channel
   → audit log append
@@ -336,8 +336,8 @@ User's phone (PWA) → WSS publish to "user:{user_id}"
 Cron: daily or weekly
   → SyncOsmJob.Run():
     → for each country/region in config:
-      → для initial seed: download Geofabrik/PBF extract and filter with osmium/osm2pgsql
-      → для small delta/search: Overpass API with fair-use limits
+      → for initial seed: download Geofabrik/PBF extract and filter with osmium/osm2pgsql
+      → for small delta/search: Overpass API with fair-use limits
       → for each POI:
         → UPSERT INTO places (match by osm_id)
         → create Activity{type: Update} if changed
@@ -428,29 +428,29 @@ volumes:
   caddy_data:
 ```
 
-## Масштабирование
+## Scaling
 
-Для 100 users — single-node выше достаточно.
+For 100 users, the single-node setup above is sufficient.
 
-Для 10k users:
+For 10k users:
 - PostgreSQL master + read replica
-- Centrifugo cluster (3 nodes с Redis для shared state)
-- CDN перед Protomaps tiles
-- Horizontal scaling TrailFed Core (stateless если не храним сессии локально)
+- Centrifugo cluster (3 nodes with Redis for shared state)
+- CDN in front of Protomaps tiles
+- Horizontal scaling of TrailFed Core (stateless if sessions are not stored locally)
 
 ---
 
-## Fact-check questions для агентов
+## Fact-check questions for agents
 
-1. PostgreSQL схема — корректны ли типы? Индексы GIST правильные для geography(POINT)?
-2. ActivityPub URI format `https://instance.com/places/{uuid}` — конвенциональная ли структура?
-3. Схема `activities` таблицы — стандартный паттерн для ActivityPub implementations?
-4. `live_locations` лучше в Redis или Postgres? (мы предполагаем опционально)
-5. Centrifugo token-based auth — достаточно ли безопасно?
-6. Geohash5 для geofence channels — правильный ли уровень (5 символов ~4.9km)?
-7. HTTP Signatures verification — go-fed/Fedify/httpsig: какая библиотека реально совместима с Mastodon/GoToSocial legacy signatures?
-8. Реверс-прокси Caddy — правильный выбор для TLS auto? Или nginx лучше?
-9. Docker image size для TrailFed Go binary — ожидаемо ~30-50 MB?
-10. PMTiles файл для whole world — подтвердить актуальный размер full planet (~120 GB z0-z15) и типичные размеры regional extracts.
-11. Нужна ли отдельная `place_sources` таблица или достаточно field-level provenance JSONB в `places`?
-12. Достаточно ли отказа от public geohash channels для MVP threat model?
+1. PostgreSQL schema — are the types correct? Are the GIST indexes right for geography(POINT)?
+2. ActivityPub URI format `https://instance.com/places/{uuid}` — is this a conventional structure?
+3. The `activities` table schema — is this the standard pattern for ActivityPub implementations?
+4. Is `live_locations` better in Redis or Postgres? (we assume this is optional)
+5. Centrifugo token-based auth — is it secure enough?
+6. Geohash5 for geofence channels — is that the right level (5 characters ~4.9 km)?
+7. HTTP Signatures verification — go-fed/Fedify/httpsig: which library is actually compatible with Mastodon/GoToSocial legacy signatures?
+8. Caddy reverse proxy — the right choice for TLS auto? Or is nginx better?
+9. Docker image size for the TrailFed Go binary — expected ~30-50 MB?
+10. PMTiles file for the whole world — confirm the current full-planet size (~120 GB z0-z15) and typical regional extract sizes.
+11. Do we need a separate `place_sources` table, or is field-level provenance in a JSONB column on `places` enough?
+12. Is dropping public geohash channels sufficient for the MVP threat model?

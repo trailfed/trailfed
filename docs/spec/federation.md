@@ -5,53 +5,53 @@ status: draft
 updated: 2026-04-22
 ---
 
-# 06. Федеративный протокол
+# 06. Federation Protocol
 
-## Основа: W3C ActivityPub
+## Foundation: W3C ActivityPub
 
-TrailFed использует [ActivityPub](https://www.w3.org/TR/activitypub/) как базовый протокол. Мы **не изобретаем собственный протокол** — мы реализуем W3C стандарт и минимально его расширяем.
+TrailFed uses [ActivityPub](https://www.w3.org/TR/activitypub/) as its base protocol. We **do not invent our own protocol** — we implement the W3C standard and extend it minimally.
 
-Это означает частичную совместимость с:
-- Mastodon, Pleroma/Akkoma, GoToSocial, Pixelfed для actors, follows, notes и базовой federation
+This means partial compatibility with:
+- Mastodon, Pleroma/Akkoma, GoToSocial, Pixelfed for actors, follows, notes and basic federation
 - Mobilizon, Friendica, Hubzilla
-- places.pub (Social Web Foundation) как read-only AS2 Place reference
-- Будущими geo-aware ActivityPub имплементациями
+- places.pub (Social Web Foundation) as a read-only AS2 Place reference
+- Future geo-aware ActivityPub implementations
 
-Важно: Mastodon не становится полноценным POI client. Он first-class обрабатывает `Note`/`Question`; `Place`, `Arrive`, `Leave`, `Travel` могут проходить как generic objects/best-effort или игнорироваться. Полная POI/check-in federation требует TrailFed-compatible peer.
+Important: Mastodon does not become a full POI client. It handles `Note`/`Question` as first-class; `Place`, `Arrive`, `Leave`, `Travel` may be processed as generic objects on a best-effort basis, or ignored. Full POI/check-in federation requires a TrailFed-compatible peer.
 
-## Используемые AS Vocabulary types (без изменений)
+## AS Vocabulary types used as-is
 
-Из [Activity Streams 2.0 Vocabulary](https://www.w3.org/TR/activitystreams-vocabulary/):
+From [Activity Streams 2.0 Vocabulary](https://www.w3.org/TR/activitystreams-vocabulary/):
 
 ### Objects
-- **`Person`** (Actor) — пользователь
-- **`Place`** — POI (кемпинг, заправка, dump station, ...)
-- **`Note`** — социальный пост
-- **`Image`** — фото (attached к POI или Note)
-- **`Document`** — GPX файл трека
+- **`Person`** (Actor) — user
+- **`Place`** — POI (campsite, fuel station, dump station, ...)
+- **`Note`** — social post
+- **`Image`** — photo (attached to a POI or Note)
+- **`Document`** — GPX track file
 
 ### Activities
-- **`Create`** — создать POI, написать пост
-- **`Update`** — обновить POI
+- **`Create`** — create a POI, publish a post
+- **`Update`** — update a POI
 - **`Delete`** — soft-delete
-- **`Follow`** — подписка на user
-- **`Like`** — лайк
+- **`Follow`** — follow a user
+- **`Like`** — like
 - **`Announce`** — reshare (boost)
-- **`Arrive`** — check-in в POI (W3C определён!)
-- **`Leave`** — check-out из POI (W3C определён!)
-- **`Travel`** — в пути (маршрут между two Places)
+- **`Arrive`** — check-in at a POI (defined by W3C!)
+- **`Leave`** — check-out from a POI (defined by W3C!)
+- **`Travel`** — in transit (route between two Places)
 
-**Ключевой момент:** `Arrive`, `Leave`, `Travel` — стандартные W3C активности. Мы их используем как-есть, не изобретаем свои аналоги.
+**Key point:** `Arrive`, `Leave`, `Travel` are standard W3C activities. We use them as-is rather than inventing our own equivalents.
 
-## Namespace расширений TrailFed
+## TrailFed extension namespace
 
 Namespace: `https://trailfed.org/ns/v1`
 
-Расширения минимальны — только там, где AS Vocabulary не покрывает travel-specific нужды.
+Extensions are kept minimal — only where the AS Vocabulary does not cover travel-specific needs.
 
 ### Extension 1: `QualityTier`
 
-Property на `Place`:
+Property on `Place`:
 
 ```json
 {
@@ -62,14 +62,14 @@ Property на `Place`:
 ```
 
 Values:
-- `0` — unverified (auto-import OSM)
+- `0` — unverified (auto-imported from OSM)
 - `1` — community-reported (1+ user check-in)
-- `2` — verified (moderator или 3+ independent check-ins)
+- `2` — verified (moderator or 3+ independent check-ins)
 - `3` — partner-verified (tourism board, SLA data)
 
 ### Extension 2: `AmenityBundle`
 
-Property на `Place`:
+Property on `Place`:
 
 ```json
 {
@@ -96,7 +96,7 @@ Property на `Place`:
 
 ### Extension 3: `TravelTrack` (extends `Travel`)
 
-Для публикации GPX треков:
+For publishing GPX tracks:
 
 ```json
 {
@@ -115,11 +115,11 @@ Property на `Place`:
 
 ### Extension 4: `LiveBroadcast` (NOT federated — WebSocket only)
 
-**Критически важно:** live location **не является** federated activity. Это ephemeral WebSocket signal. Мы вводим тип только для documentation purposes — чтобы было ясно что это особый case.
+**Critically important:** live location is **not** a federated activity. It is an ephemeral WebSocket signal. We define the type only for documentation purposes — to make it clear that this is a special case.
 
 ## GeoSocial compatibility profile
 
-TrailFed peers advertise supported geo capabilities in NodeInfo. Это снижает protocol fragmentation и позволяет Mastodon-compatible social federation жить отдельно от POI federation.
+TrailFed peers advertise supported geo capabilities in NodeInfo. This reduces protocol fragmentation and lets Mastodon-compatible social federation coexist alongside POI federation.
 
 ### Capabilities
 
@@ -143,21 +143,21 @@ TrailFed peers advertise supported geo capabilities in NodeInfo. Это сниж
 ### `Place` MUST fields
 
 - `id`
-- `type: "Place"` или `["Place", "geojson:Feature"]`
-- `name` или `nameMap`
-- `latitude` и `longitude`, либо `geojson:hasGeometry`
+- `type: "Place"` or `["Place", "geojson:Feature"]`
+- `name` or `nameMap`
+- `latitude` and `longitude`, or `geojson:hasGeometry`
 - source/license metadata: `dcterms:source`, `dcterms:license`, or `trailfed:source`
 
 ### `Place` SHOULD fields
 
 - `summary`
-- `tag` или `trailfed:category`
+- `tag` or `trailfed:category`
 - `trailfed:amenities`
 - `trailfed:qualityTier`
 - `trailfed:sourceConfidence`
 - `attributedTo`
 
-## Actor discovery и identity
+## Actor discovery and identity
 
 ### WebFinger (RFC 7033)
 
@@ -245,15 +245,15 @@ GET /nodeinfo/2.1
 
 ## Authentication: HTTP Signatures
 
-Interop reality: Fediverse S2S compatibility сегодня требует legacy Cavage-style HTTP Signatures (`Signature` header), потому что Mastodon/GoToSocial/Pleroma/Akkoma в основном используют этот профиль. [RFC 9421 HTTP Message Signatures](https://www.rfc-editor.org/rfc/rfc9421.html) — актуальный IETF Proposed Standard, но пока не является baseline для Fediverse interop.
+Interop reality: Fediverse S2S compatibility today requires the legacy Cavage-style HTTP Signatures (`Signature` header), because Mastodon/GoToSocial/Pleroma/Akkoma mostly use that profile. [RFC 9421 HTTP Message Signatures](https://www.rfc-editor.org/rfc/rfc9421.html) is the current IETF Proposed Standard, but is not yet a baseline for Fediverse interop.
 
-TrailFed должен:
+TrailFed should:
 1. **MUST support:** legacy `Signature` header compatible with Mastodon/GoToSocial.
-2. **SHOULD support:** RFC 9421 `Signature-Input`/`Signature` для future peers.
+2. **SHOULD support:** RFC 9421 `Signature-Input`/`Signature` for future peers.
 3. **MUST sign:** POST inbox deliveries.
-4. **SHOULD sign:** GET requests к ActivityPub resources для secure/authorized fetch peers.
+4. **SHOULD sign:** GET requests to ActivityPub resources for secure/authorized fetch peers.
 
-Каждый S2S POST на `/inbox` подписан:
+Every S2S POST to `/inbox` is signed:
 
 ```
 POST /actors/alice/inbox HTTP/1.1
@@ -269,44 +269,44 @@ Signature: keyId="https://other-instance.com/actors/bob#main-key",
 {...JSON-LD Activity...}
 ```
 
-Верификация:
-1. Fetch `keyId` публичный ключ
-2. Reconstruct signing string
-3. Verify signature
-4. Check `Date` в пределах ±30 секунд
-5. Check `Digest` matches body
+Verification:
+1. Fetch the public key at `keyId`
+2. Reconstruct the signing string
+3. Verify the signature
+4. Check `Date` is within ±30 seconds
+5. Check `Digest` matches the body
 
 ## Trust model
 
-Каждый instance имеет таблицу `peers` с trust levels:
+Each instance maintains a `peers` table with trust levels:
 
-### `trusted` — Белый список
-- Activities применяются автоматически
-- Place creates не идут в moderation queue
-- Обычно: друзья-instances, проверенные partners
+### `trusted` — Allowlist
+- Activities are applied automatically
+- Place creates skip the moderation queue
+- Typically: friend instances, vetted partners
 
-### `graylist` — Серый список (дефолт)
-- Activities идут в moderation queue
-- Admin одобряет вручную для первых N activities
-- После N успешных без flags → авто-apply может быть включено
+### `graylist` — Default
+- Activities go into the moderation queue
+- Admin approves manually for the first N activities
+- After N successful ones with no flags, auto-apply may be enabled
 
-### `blocklist` — Чёрный список
-- Все activities dropped
-- Outgoing activities к этому peer НЕ отправляются
-- Аналог Mastodon defederation
+### `blocklist` — Blocklist
+- All activities are dropped
+- Outgoing activities to this peer are NOT sent
+- Equivalent to Mastodon defederation
 
 ### Reputation score
-Локальный (не federated) score per peer:
-- `+1` за each valid activity применённую
-- `-5` за flagged content от этого peer
-- `-20` за spam patterns (много creates быстро)
-- Админ может вручную корректировать
+Local (non-federated) score per peer:
+- `+1` for each valid activity applied
+- `-5` for flagged content from the peer
+- `-20` for spam patterns (many creates in a short window)
+- Admin can adjust manually
 
 ## Conflict resolution
 
-### Geospatial fingerprint для dedup
+### Geospatial fingerprint for dedup
 
-Когда приходит `Create{Place}`, проверяем на duplicate:
+When a `Create{Place}` arrives, we check for duplicates:
 
 ```
 candidate_score =
@@ -318,11 +318,11 @@ candidate_score =
     address_phone_website_similarity
 ```
 
-Простой hash `round(lat,4)+name+category` допустим только как быстрый prefilter, но не как единственный dedup mechanism.
+A simple hash such as `round(lat,4)+name+category` is acceptable only as a fast prefilter, not as the sole dedup mechanism.
 
-Если candidate score выше threshold:
-- Same origin instance → treated as Update
-- Different origin → propose Merge activity to admin moderation queue
+If the candidate score exceeds the threshold:
+- Same origin instance → treat as Update
+- Different origin → propose a Merge activity to the admin moderation queue
 
 ### Merge activity
 
@@ -335,69 +335,69 @@ candidate_score =
 }
 ```
 
-Каждый instance **сам решает** применять Merge или нет. Может быть применён:
-- Автоматически если source был from trusted peer
-- После admin review otherwise
+Each instance **decides for itself** whether to apply a Merge. It may be applied:
+- Automatically if the source was from a trusted peer
+- After admin review otherwise
 
-После применения: `places.canonical_uri` ссылается на target, запросы к `uri` редиректят.
+After applying: `places.canonical_uri` points to the target, and requests to `uri` redirect.
 
-## Live location — почему НЕ federated
+## Live location — why it is NOT federated
 
-Live location (real-time GPS stream) **не федерируется через ActivityPub**. Причины:
+Live location (real-time GPS stream) is **not federated via ActivityPub**. Reasons:
 
-1. **Privacy** — federation = sending data to N peers. Для live location это magnitude больше surface area для утечек.
-2. **Performance** — ActivityPub eventual consistency не подходит для real-time (latency может быть минуты).
-3. **Scope** — live location — session data, не historical record.
+1. **Privacy** — federation means sending data to N peers. For live location, this means an order of magnitude more surface area for leaks.
+2. **Performance** — ActivityPub's eventual consistency does not fit real-time (latency can be minutes).
+3. **Scope** — live location is session data, not a historical record.
 
-Вместо этого:
-- Live location broadcast ТОЛЬКО через WebSocket (Centrifugo) на same instance
+Instead:
+- Live location broadcasts ONLY via WebSocket (Centrifugo) on the same instance
 - No public geohash channels in MVP
-- Delivery только explicit allowlist, не "all followers"
-- Для federated "locations nearby" — opt-in **snapshot** periodical publish как `Travel` activity (every 30 мин, с CITY или COUNTRY precision)
-- Snapshot — это persistent record, не stream
+- Delivery is restricted to an explicit allowlist, not "all followers"
+- For a federated "locations nearby" experience — opt-in **snapshot** periodic publish as a `Travel` activity (every 30 min, at CITY or COUNTRY precision)
+- A snapshot is a persistent record, not a stream
 
-## places.pub интеграция
+## places.pub integration
 
-[places.pub](https://places.pub/) — AS2/ActivityPub-compatible wrapper над OSM Places. Они публикуют Place objects для OSM POIs с URL формата `https://places.pub/{node|way|relation}/{id}`.
+[places.pub](https://places.pub/) is an AS2/ActivityPub-compatible wrapper over OSM Places. It publishes Place objects for OSM POIs with URLs of the form `https://places.pub/{node|way|relation}/{id}`.
 
-Наша интеграция:
-- TrailFed fetches `https://places.pub/{osm_type}/{osm_id}` для получения Place object
-- Сохраняем как external Place reference
-- Cross-reference через `trailfed:osm_id`
+Our integration:
+- TrailFed fetches `https://places.pub/{osm_type}/{osm_id}` to obtain a Place object
+- We store it as an external Place reference
+- Cross-referenced via `trailfed:osm_id`
 
-Не "федерируемся" в полном смысле — places.pub read-only, objects не Actors, у них нет inbox/outbox. Мы не шлём им activities; мы консумим их данные как canonical AS2 Place references.
+We do not "federate" in the full sense — places.pub is read-only, the objects are not Actors, and they have no inbox/outbox. We do not send them activities; we consume their data as canonical AS2 Place references.
 
-## Пример полной federation flow
+## Example of a full federation flow
 
-**Scenario:** Alice на instance-a создаёт POI "Playa del Sol campsite".
+**Scenario:** Alice on instance-a creates a POI "Playa del Sol campsite".
 
-1. Alice → `POST /api/v1/places` (REST, локальное API)
-2. Instance-a создаёт Place object, Activity{Create, object: Place}
-3. Instance-a fans out:
-   - Для каждого follower Alice на других instances:
-     - Build signed HTTP POST to их inbox
+1. Alice → `POST /api/v1/places` (REST, local API)
+2. instance-a creates the Place object and an Activity{Create, object: Place}
+3. instance-a fans out:
+   - For each follower of Alice on other instances:
+     - Build a signed HTTP POST to their inbox
      - Payload: JSON-LD Activity
-   - Для `places.pub` (если настроено) — только log, не push
-4. Instance-b получает POST `/actors/bob/inbox`
+   - For `places.pub` (if configured) — log only, no push
+4. instance-b receives POST `/actors/bob/inbox`
 5. Verify signature, parse Activity
-6. Fingerprint check — new POI, no dup
-7. Insert Place locally (if trusted peer or pass moderation)
-8. Notify Bob через WebSocket "place:new_in_area"
-9. Instance-a gets 202 Accepted
+6. Fingerprint check — new POI, no duplicate
+7. Insert Place locally (if trusted peer or after passing moderation)
+8. Notify Bob via WebSocket "place:new_in_area"
+9. instance-a receives 202 Accepted
 
-Total latency: < 5 секунд для 10 subscribers.
+Total latency: < 5 seconds for 10 subscribers.
 
 ---
 
-## Fact-check questions для агентов
+## Fact-check questions for agents
 
-1. **W3C AS Vocabulary** — подтвердить что `Arrive`, `Leave`, `Travel` определены в standard (проверить https://www.w3.org/TR/activitystreams-vocabulary/)
-2. **RFC 9421 vs legacy Cavage** — подтвердить exact compatibility expectations для Mastodon/GoToSocial/Pleroma/Akkoma.
-3. **WebFinger RFC 7033** — корректный номер?
-4. **NodeInfo schema** — 2.1 актуальная версия?
-5. **places.pub API** — какая их реальная схема endpoints (проверить их repo)?
-6. **JSON-LD @context** — правильно ли extend через custom namespace?
-7. **Mastodon compatibility** — какие `Place`/`Arrive` payloads Mastodon принимает best-effort, а какие игнорирует?
-8. **HTTP Signatures digest** — SHA-256 обязательно или SHA-512 допустим?
-9. **Geohash5 precision** — на самом деле ~4.9 km × 4.9 km?
-10. **bridgy.fed** — есть ли этот проект для ActivityPub↔ATProto bridge?
+1. **W3C AS Vocabulary** — confirm that `Arrive`, `Leave`, `Travel` are defined in the standard (check https://www.w3.org/TR/activitystreams-vocabulary/)
+2. **RFC 9421 vs legacy Cavage** — confirm exact compatibility expectations for Mastodon/GoToSocial/Pleroma/Akkoma.
+3. **WebFinger RFC 7033** — is the RFC number correct?
+4. **NodeInfo schema** — is 2.1 the current version?
+5. **places.pub API** — what is their real endpoint schema (check their repo)?
+6. **JSON-LD @context** — is extending via a custom namespace done correctly?
+7. **Mastodon compatibility** — which `Place`/`Arrive` payloads does Mastodon accept on a best-effort basis, and which does it ignore?
+8. **HTTP Signatures digest** — is SHA-256 required, or is SHA-512 acceptable?
+9. **Geohash5 precision** — is it really ~4.9 km × 4.9 km?
+10. **bridgy.fed** — does such a project exist for an ActivityPub↔ATProto bridge?
