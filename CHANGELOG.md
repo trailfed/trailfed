@@ -5,6 +5,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 ## [Unreleased] — Phase 0 scaffold
 
 ### Added
+- First real federation endpoint — the reference instance now publishes a discoverable ActivityPub `Person` at `/actors/stub` with an RSA public key, and WebFinger resolves `acct:stub@camp.trailfed.org` to it.
 - Monorepo layout (pnpm workspaces) with `server/` (Fedify + Hono) and `web/` (SvelteKit + MapLibre + PMTiles).
 - Docker Compose dev stack: PostgreSQL 16 + PostGIS 3.4, Centrifugo v6, server, web, Caddy reverse proxy.
 - Governance: AGPL-3.0 license, Contributor Covenant 2.1, CONTRIBUTING (DCO sign-off, no CLA), SECURITY policy (90-day coordinated disclosure), GOVERNANCE model (BDFL → Maintainer Council).
