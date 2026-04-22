@@ -7,11 +7,30 @@ on:
 
 jobs:
   check:
+    name: Check DCO sign-off
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Check DCO sign-off
-        uses: tim-actions/dco@master
+      - name: Verify every commit has Signed-off-by
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          missing=0
+          while IFS= read -r sha; do
+            if ! git log -1 --format=%B "$sha" | grep -qiE '^Signed-off-by: .+ <.+@.+>$'; then
+              echo "::error::Commit $sha is missing a Signed-off-by trailer."
+              git log -1 --format='%h %s (%an)' "$sha"
+              missing=$((missing + 1))
+            fi
+          done < <(git log --format=%H "$BASE_SHA..$HEAD_SHA")
+          if [ "$missing" -gt 0 ]; then
+            echo "::error::$missing commit(s) without DCO sign-off."
+            echo "Fix by rebasing and re-committing with git commit -s, or append sign-off with git rebase --signoff."
+            exit 1
+          fi
+          echo "All commits are signed off."

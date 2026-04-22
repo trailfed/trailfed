@@ -30,6 +30,8 @@ Open [http://localhost:8090](http://localhost:8090). A stub WebFinger responder 
 
 > **Database migrations** are applied explicitly via `pnpm --filter @trailfed/server migrate` (Drizzle), not on server boot. Schema lives in `server/src/db/schema.ts`; SQL migrations under `server/src/db/migrations/`.
 
+To get a real map instead of the MapLibre demo basemap, drop a regional PMTiles file into `infra/pmtiles/` — see [`infra/pmtiles/README.md`](infra/pmtiles/README.md) for the Cyprus quick-start.
+
 See [docs/deployment.md](docs/deployment.md) for production.
 
 ## Documentation

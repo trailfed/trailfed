@@ -13,6 +13,20 @@
         reverse_proxy server:3000
     }
 
+    # Self-hosted PMTiles basemap. file_server handles HTTP byte-range
+    # requests natively, which is what the PMTiles protocol needs.
+    # The .pmtiles file is gitignored; see infra/pmtiles/README.md.
+    handle_path /tiles/* {
+        root * /srv/pmtiles
+        header {
+            Access-Control-Allow-Origin *
+            Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+            Access-Control-Allow-Headers "Range"
+            Access-Control-Expose-Headers "Content-Range, Content-Length, Accept-Ranges"
+        }
+        file_server
+    }
+
     # Everything else → SvelteKit frontend
     handle {
         reverse_proxy web:5173
