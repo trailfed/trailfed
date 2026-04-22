@@ -52,6 +52,6 @@ app.get('/nodeinfo/2.0', (c) =>
 
 const port = Number(process.env.PORT ?? 3000);
 
-serve({ fetch: app.fetch, port, hostname: '0.0.0.0' }, (info) => {
+serve({ fetch: app.fetch, port, hostname: '0.0.0.0' }, (info: { port: number }) => {
   log.info({ port: info.port }, 'trailfed server listening');
 });

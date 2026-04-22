@@ -21,6 +21,7 @@ ENV NODE_ENV=production
 COPY --from=build /app/web/build ./build
 COPY --from=build /app/web/package.json ./package.json
 COPY --from=build /app/web/node_modules ./node_modules
+COPY --from=build /app/node_modules /app/node_modules
 USER node
 EXPOSE 5173
 ENV PORT=5173

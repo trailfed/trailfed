@@ -21,6 +21,7 @@ ENV NODE_ENV=production
 COPY --from=build /app/server/package.json /app/server/package.json
 COPY --from=build /app/server/dist /app/server/dist
 COPY --from=build /app/server/node_modules /app/server/node_modules
+COPY --from=build /app/node_modules /app/node_modules
 WORKDIR /app/server
 USER node
 EXPOSE 3000
