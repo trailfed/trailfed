@@ -9,6 +9,8 @@ import {
   generateActorKeyPair,
   publicKeyPemFromPrivate,
 } from './federation/actor.js';
+import { fetchActorPublicKeyPem, verifyRequestSignature } from './federation/http-signature.js';
+import { dispatchActivity, type ActivityHandler } from './federation/inbox.js';
 
 const log = pino({ name: 'trailfed-server' });
 
@@ -30,7 +32,21 @@ function loadActorKeys(): { privateKeyPem: string; publicKeyPem: string } {
 
 const actorKeys = loadActorKeys();
 
-export function createApp(keys: { publicKeyPem: string } = actorKeys): Hono {
+// Activity dispatcher — Phase 1 handlers land here as we implement them
+// (Follow → Accept, Create Place, …). For now every verified delivery is
+// accepted and logged; unknown types are dropped with a log line.
+const defaultActivityHandlers: Record<string, ActivityHandler> = {};
+
+export interface CreateAppOptions {
+  keys?: { publicKeyPem: string };
+  activityHandlers?: Record<string, ActivityHandler>;
+  fetchPublicKeyPem?: (keyId: string) => Promise<string | null>;
+}
+
+export function createApp(options: CreateAppOptions = {}): Hono {
+  const keys = options.keys ?? actorKeys;
+  const activityHandlers = options.activityHandlers ?? defaultActivityHandlers;
+  const fetchPublicKeyPem = options.fetchPublicKeyPem ?? fetchActorPublicKeyPem;
   const app = new Hono();
 
   // When behind a reverse proxy (nginx/Caddy), use PUBLIC_ORIGIN so WebFinger
@@ -82,21 +98,42 @@ export function createApp(keys: { publicKeyPem: string } = actorKeys): Hono {
     });
   });
 
-  // Minimal inbox. We log the payload and 202 it; HTTP Signature verification
-  // is Phase 1 scope, but we already reject unsigned deliveries so we don't
-  // silently accept bogus traffic.
+  // Inbox: verify the HTTP Signature (draft-cavage-12) before routing the
+  // activity to the dispatcher. Unsigned / bad-sig / digest-mismatch deliveries
+  // are rejected with 401.
   app.post('/actors/stub/inbox', async (c) => {
-    if (!c.req.header('signature')) {
-      return c.json({ error: 'unsigned request' }, 401);
+    const rawBody = Buffer.from(await c.req.arrayBuffer());
+    const headers: Record<string, string | undefined> = {};
+    for (const [name, value] of c.req.raw.headers) {
+      headers[name.toLowerCase()] = value;
+    }
+    const url = new URL(c.req.url);
+    const result = await verifyRequestSignature({
+      method: c.req.method,
+      path: url.pathname + url.search,
+      headers,
+      body: rawBody,
+      fetchPublicKeyPem,
+    });
+    if (!result.ok) {
+      log.warn({ reason: result.reason }, 'inbox: signature verification failed');
+      return c.json({ error: 'signature verification failed', reason: result.reason }, 401);
     }
     let payload: unknown = null;
     try {
-      payload = await c.req.json();
+      payload = rawBody.length > 0 ? JSON.parse(rawBody.toString('utf8')) : null;
     } catch {
-      payload = null;
+      return c.json({ error: 'invalid JSON body' }, 400);
     }
-    log.info({ payload }, 'inbox delivery (not verified)');
-    return c.json({ accepted: true }, 202);
+    if (!payload || typeof payload !== 'object') {
+      return c.json({ error: 'empty or non-object activity' }, 400);
+    }
+    const outcome = await dispatchActivity(payload as Record<string, unknown>, activityHandlers, {
+      signerKeyId: result.keyId,
+      log,
+    });
+    log.info({ keyId: result.keyId, outcome }, 'inbox delivery verified');
+    return c.json({ accepted: true, outcome }, 202);
   });
 
   app.get('/nodeinfo/2.0', (c) =>
@@ -114,7 +151,7 @@ export function createApp(keys: { publicKeyPem: string } = actorKeys): Hono {
   return app;
 }
 
-export const app = createApp();
+export const app = createApp({});
 
 if (process.env.NODE_ENV !== 'test') {
   const port = Number(process.env.PORT ?? 3000);

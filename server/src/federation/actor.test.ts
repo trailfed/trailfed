@@ -22,7 +22,7 @@ describe('buildStubActor', () => {
 });
 
 describe('HTTP endpoints', () => {
-  const app = createApp(keys);
+  const app = createApp({ keys });
 
   it('GET /actors/stub returns ActivityPub Person JSON-LD', async () => {
     const res = await app.request('https://camp.trailfed.org/actors/stub');
@@ -64,7 +64,10 @@ describe('HTTP endpoints', () => {
     expect(res.status).toBe(401);
   });
 
-  it('inbox accepts signed POSTs with 202', async () => {
+  it('inbox rejects bogus signatures with 401', async () => {
+    // Full signature verification is covered in http-signature.test.ts; this
+    // test just pins that the inbox refuses a structurally-present but
+    // invalid signature header (previously it would 202 anything signed-ish).
     const res = await app.request('https://camp.trailfed.org/actors/stub/inbox', {
       method: 'POST',
       headers: {
@@ -73,7 +76,7 @@ describe('HTTP endpoints', () => {
       },
       body: JSON.stringify({ type: 'Create' }),
     });
-    expect(res.status).toBe(202);
+    expect(res.status).toBe(401);
   });
 
   it('/nodeinfo/2.0 reports one user', async () => {

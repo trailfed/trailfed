@@ -65,15 +65,36 @@ Update discipline: tick items as you complete them (`- [ ]` → `- [x]`). Add ne
 
 ---
 
-## Phase 1 — ActivityPub MVP (not started)
+## Phase 1 — ActivityPub MVP
 
-Scope per `docs/roadmap.md`: minimal working federated server with user accounts, basic follow graph, places published as `Create Place`, and inter-instance delivery. All items to be expanded when Phase 0 spikes confirm the direction.
+Scope per `docs/roadmap.md`: minimal working federated server with user accounts, basic follow graph, places published as `Create Place`, and inter-instance delivery.
 
-- [ ] User registration + WebFinger resolution (real, not stubbed)
-- [ ] Inbox/outbox endpoints with signature verification (HTTP Signatures draft-cavage-12)
-- [ ] `Place` Activity type end-to-end (create, follow, federate)
-- [ ] Basic federation test against a second local instance
-- [ ] Moderation primitives: block list, report action
+### Federation primitives
+
+- [x] **HTTP Signature verification on inbox** — parse `Signature` header, fetch remote actor's public key, verify `(request-target) host date digest` per draft-cavage-12. Reject unsigned / bad-sig deliveries with 401. Route accepted payloads through a typed dispatcher (by Activity `type`). Done when a signed `Follow` from a second local instance reaches the dispatcher and an unsigned copy is rejected with 401.
+- [ ] **Actor persistence** — replace the hardcoded `stub` actor with rows in the `actors` table; key material loaded from DB, not env. Seed a single `stub` row on first boot for continuity. Done when `/actors/stub` serves from DB and WebFinger resolves any actor from `actors.preferred_username`.
+- [ ] **Outbox + signed delivery** — `POST /actors/:user/outbox` accepts an activity, persists to `activities`, and delivers to each recipient inbox with HTTP Signature using the actor's private key. Done when a delivery from instance A lands verified in instance B's inbox.
+- [ ] **Follow / Accept** — inbox dispatcher handles incoming `Follow`, persists to `follows`, auto-replies with `Accept`. Done when a second local instance's actor shows as a follower after a round-trip.
+
+### `Place` activity end-to-end
+
+- [ ] Extend Activity vocabulary with `Place` (name, category, geo) — update `docs/spec/federation.md` with the JSON-LD shape.
+- [ ] `Create Place` out of the outbox of an actor creates a row in `places` + `place_sources` (source=`activitypub`).
+- [ ] Inbound `Create Place` from a remote actor is stored locally and appears on the map with `source=remote`.
+
+### User accounts
+
+- [ ] Minimal registration endpoint (username + password via argon2id) creating an `actors` row with generated keypair.
+- [ ] WebFinger resolves any registered username (not just `stub`).
+
+### Moderation
+
+- [ ] Instance-level block list (domain-based) — drop inbox deliveries from blocked hosts before signature check.
+- [ ] Report activity: `Flag` stored in `activities` with moderator queue endpoint.
+
+### Exit criteria
+
+- [ ] Two local instances (`camp.trailfed.org` + `camp2.trailfed.local`) exchange a full Follow → Accept → Create Place → inbox dispatch round-trip and the remote place renders on both maps.
 
 ---
 
