@@ -50,7 +50,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Build server image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: server/Dockerfile
@@ -58,7 +58,7 @@ jobs:
           tags: trailfed/server:ci
 
       - name: Build web image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: web/Dockerfile
