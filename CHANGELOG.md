@@ -5,6 +5,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 ## [Unreleased] — Phase 0 scaffold
 
 ### Added
+- Local actors now live in the `actors` table — keys are persisted, and a `stub` row is seeded on first boot (when `DATABASE_URL` and `PUBLIC_ORIGIN` are set). `/actors/:username`, `/actors/:username/inbox` and WebFinger resolve arbitrary registered usernames from the DB; unknown usernames 404.
 - Inbox now verifies inbound ActivityPub deliveries with HTTP Signatures (draft-cavage-12, rsa-sha256 + `Digest: SHA-256`) before routing them through a typed activity dispatcher — unsigned, bad-signature and tampered-body deliveries are rejected with 401. Groundwork for Phase 1 `Follow` / `Accept` handling.
 - Database schema and migration runner (Drizzle ORM) for the nine core tables — actors, places, place_sources, activities, notes, checkins, follows, peers, live_locations — including PostGIS `geography(Point, 4326)` columns and spatial GIST indexes. Operators apply migrations with `pnpm --filter @trailfed/server migrate` before first start.
 - First real federation endpoint — the reference instance now publishes a discoverable ActivityPub `Person` at `/actors/stub` with an RSA public key, and WebFinger resolves `acct:stub@camp.trailfed.org` to it.

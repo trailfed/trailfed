@@ -72,7 +72,7 @@ Scope per `docs/roadmap.md`: minimal working federated server with user accounts
 ### Federation primitives
 
 - [x] **HTTP Signature verification on inbox** — parse `Signature` header, fetch remote actor's public key, verify `(request-target) host date digest` per draft-cavage-12. Reject unsigned / bad-sig deliveries with 401. Route accepted payloads through a typed dispatcher (by Activity `type`). Done when a signed `Follow` from a second local instance reaches the dispatcher and an unsigned copy is rejected with 401.
-- [ ] **Actor persistence** — replace the hardcoded `stub` actor with rows in the `actors` table; key material loaded from DB, not env. Seed a single `stub` row on first boot for continuity. Done when `/actors/stub` serves from DB and WebFinger resolves any actor from `actors.preferred_username`.
+- [x] **Actor persistence** — replace the hardcoded `stub` actor with rows in the `actors` table; key material loaded from DB, not env. Seed a single `stub` row on first boot for continuity. Done when `/actors/stub` serves from DB and WebFinger resolves any actor from `actors.preferred_username`.
 - [ ] **Outbox + signed delivery** — `POST /actors/:user/outbox` accepts an activity, persists to `activities`, and delivers to each recipient inbox with HTTP Signature using the actor's private key. Done when a delivery from instance A lands verified in instance B's inbox.
 - [ ] **Follow / Accept** — inbox dispatcher handles incoming `Follow`, persists to `follows`, auto-replies with `Accept`. Done when a second local instance's actor shows as a follower after a round-trip.
 
