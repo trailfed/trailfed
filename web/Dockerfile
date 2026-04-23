@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM node:20-bookworm-slim AS base
+FROM node:25-bookworm-slim AS base
 WORKDIR /app
 RUN corepack enable
 
@@ -14,7 +14,7 @@ COPY web ./web
 COPY tsconfig.base.json ./
 RUN pnpm --filter @trailfed/web run build
 
-FROM node:20-bookworm-slim AS runtime
+FROM node:25-bookworm-slim AS runtime
 WORKDIR /app/web
 RUN corepack enable
 ENV NODE_ENV=production
