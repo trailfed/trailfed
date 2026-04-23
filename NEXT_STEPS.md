@@ -89,8 +89,8 @@ Scope per `docs/roadmap.md`: minimal working federated server with user accounts
 
 ### Moderation
 
-- [ ] Instance-level block list (domain-based) — drop inbox deliveries from blocked hosts before signature check.
-- [ ] Report activity: `Flag` stored in `activities` with moderator queue endpoint.
+- [x] Instance-level block list (domain-based) — drop inbox deliveries from blocked hosts before signature check.
+- [x] Report activity: `Flag` stored in `activities` with moderator queue endpoint.
 
 ### Exit criteria
 
