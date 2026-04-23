@@ -22,6 +22,42 @@ export interface LocalActorRecord {
   privateKeyPem: string;
 }
 
+/**
+ * Insert-or-fetch a remote actor by its ActivityPub URI. Used when we receive
+ * a Follow from a host we haven't seen before — we need a row so the
+ * `follows` FK has something to reference. Key material isn't fetched here
+ * (HTTP Signature verification already fetched it); we can lazily pull it
+ * on outbound deliveries if needed.
+ */
+export async function ensureRemoteActor(
+  db: DbClient,
+  params: {
+    uri: string;
+    username: string;
+    domain: string;
+    inboxUrl?: string;
+  },
+): Promise<{ id: bigint; uri: string }> {
+  const existing = await db
+    .select({ id: actors.id, uri: actors.uri })
+    .from(actors)
+    .where(eq(actors.uri, params.uri))
+    .limit(1);
+  if (existing[0]) return { id: existing[0].id, uri: existing[0].uri };
+
+  const inserted = await db
+    .insert(actors)
+    .values({
+      uri: params.uri,
+      username: params.username,
+      domain: params.domain,
+      isLocal: false,
+      inboxUrl: params.inboxUrl ?? null,
+    })
+    .returning({ id: actors.id, uri: actors.uri });
+  return inserted[0];
+}
+
 export async function findLocalActorByUsername(
   db: DbClient,
   username: string,
