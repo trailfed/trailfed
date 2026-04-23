@@ -57,21 +57,28 @@ export function publicKeyPemFromPrivate(privateKeyPem: string): string {
 }
 
 /**
- * Build the hardcoded "stub" actor for this instance.
- *
- * TODO(phase-1): persist actors in DB once #4 merges; replace this with a
- * Fedify `Federation` + actor dispatcher reading from `actors` table.
+ * Build an ActivityPub `Person` actor JSON-LD document from a local actor
+ * record. URLs are assembled from the incoming request origin so the same DB
+ * row serves correctly behind a reverse proxy with `PUBLIC_ORIGIN` set or in
+ * dev where the origin varies.
  */
-export function buildStubActor(origin: string, publicKeyPem: string): StubActor {
-  const id = `${origin}/actors/stub`;
+export function buildActor(
+  origin: string,
+  actor: {
+    username: string;
+    displayName?: string | null;
+    bio?: string | null;
+    publicKeyPem: string;
+  },
+): StubActor {
+  const id = `${origin}/actors/${actor.username}`;
   return {
     '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
     id,
     type: 'Person',
-    preferredUsername: 'stub',
-    name: 'TrailFed stub actor',
-    summary:
-      'Phase 0 placeholder actor for the TrailFed reference instance. Real user accounts land in Phase 1.',
+    preferredUsername: actor.username,
+    name: actor.displayName ?? actor.username,
+    summary: actor.bio ?? '',
     inbox: `${id}/inbox`,
     outbox: `${id}/outbox`,
     followers: `${id}/followers`,
@@ -79,7 +86,20 @@ export function buildStubActor(origin: string, publicKeyPem: string): StubActor 
     publicKey: {
       id: `${id}#main-key`,
       owner: id,
-      publicKeyPem,
+      publicKeyPem: actor.publicKeyPem,
     },
   };
+}
+
+/**
+ * Compatibility wrapper: the original hardcoded `stub` actor. Still used by
+ * tests that don't touch the DB; new code should go through `buildActor`.
+ */
+export function buildStubActor(origin: string, publicKeyPem: string): StubActor {
+  return buildActor(origin, {
+    username: 'stub',
+    displayName: 'TrailFed stub actor',
+    bio: 'Phase 0 placeholder actor for the TrailFed reference instance. Real user accounts land in Phase 1.',
+    publicKeyPem,
+  });
 }

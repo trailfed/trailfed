@@ -2,10 +2,23 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { createApp } from '../index.js';
+import { createApp, type ActorLookup } from '../index.js';
 import { buildStubActor, generateActorKeyPair } from './actor.js';
 
 const keys = generateActorKeyPair();
+
+const stubLookup: ActorLookup = async (username) =>
+  username === 'stub'
+    ? {
+        id: 0n,
+        username: 'stub',
+        domain: 'camp.trailfed.org',
+        displayName: 'TrailFed stub actor',
+        bio: null,
+        publicKeyPem: keys.publicKeyPem,
+        privateKeyPem: keys.privateKeyPem,
+      }
+    : null;
 
 describe('buildStubActor', () => {
   it('produces AP-shaped JSON-LD with stable URLs', () => {
@@ -22,7 +35,7 @@ describe('buildStubActor', () => {
 });
 
 describe('HTTP endpoints', () => {
-  const app = createApp(keys);
+  const app = createApp({ lookupActor: stubLookup });
 
   it('GET /actors/stub returns ActivityPub Person JSON-LD', async () => {
     const res = await app.request('https://camp.trailfed.org/actors/stub');
@@ -64,7 +77,10 @@ describe('HTTP endpoints', () => {
     expect(res.status).toBe(401);
   });
 
-  it('inbox accepts signed POSTs with 202', async () => {
+  it('inbox rejects bogus signatures with 401', async () => {
+    // Full signature verification is covered in http-signature.test.ts; this
+    // test just pins that the inbox refuses a structurally-present but
+    // invalid signature header (previously it would 202 anything signed-ish).
     const res = await app.request('https://camp.trailfed.org/actors/stub/inbox', {
       method: 'POST',
       headers: {
@@ -73,7 +89,38 @@ describe('HTTP endpoints', () => {
       },
       body: JSON.stringify({ type: 'Create' }),
     });
-    expect(res.status).toBe(202);
+    expect(res.status).toBe(401);
+  });
+
+  it('serves arbitrary usernames from the lookup', async () => {
+    const aliceKeys = generateActorKeyPair();
+    const multiLookup: ActorLookup = async (u) =>
+      u === 'alice'
+        ? {
+            id: 1n,
+            username: 'alice',
+            domain: 'camp.trailfed.org',
+            displayName: 'Alice',
+            bio: 'test',
+            publicKeyPem: aliceKeys.publicKeyPem,
+            privateKeyPem: aliceKeys.privateKeyPem,
+          }
+        : null;
+    const multiApp = createApp({ lookupActor: multiLookup });
+
+    const aliceRes = await multiApp.request('https://camp.trailfed.org/actors/alice');
+    expect(aliceRes.status).toBe(200);
+    const aliceBody = (await aliceRes.json()) as { id: string; preferredUsername: string };
+    expect(aliceBody.id).toBe('https://camp.trailfed.org/actors/alice');
+    expect(aliceBody.preferredUsername).toBe('alice');
+
+    const unknownRes = await multiApp.request('https://camp.trailfed.org/actors/bob');
+    expect(unknownRes.status).toBe(404);
+
+    const wfRes = await multiApp.request(
+      'https://camp.trailfed.org/.well-known/webfinger?resource=acct:bob@camp.trailfed.org',
+    );
+    expect(wfRes.status).toBe(404);
   });
 
   it('/nodeinfo/2.0 reports one user', async () => {

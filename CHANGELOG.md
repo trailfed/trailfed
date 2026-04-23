@@ -6,6 +6,8 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 
 ### Added
 - Map on the reference instance now renders the imported OSM POIs — `/api/places` returns a GeoJSON FeatureCollection from the `places` table and the web frontend draws colour-coded circles (campsites green, fuel orange, dump stations blue) with click-to-popup.
+- Local actors now live in the `actors` table — keys are persisted, and a `stub` row is seeded on first boot (when `DATABASE_URL` and `PUBLIC_ORIGIN` are set). `/actors/:username`, `/actors/:username/inbox` and WebFinger resolve arbitrary registered usernames from the DB; unknown usernames 404.
+- Inbox now verifies inbound ActivityPub deliveries with HTTP Signatures (draft-cavage-12, rsa-sha256 + `Digest: SHA-256`) before routing them through a typed activity dispatcher — unsigned, bad-signature and tampered-body deliveries are rejected with 401. Groundwork for Phase 1 `Follow` / `Accept` handling.
 - Database schema and migration runner (Drizzle ORM) for the nine core tables — actors, places, place_sources, activities, notes, checkins, follows, peers, live_locations — including PostGIS `geography(Point, 4326)` columns and spatial GIST indexes. Operators apply migrations with `pnpm --filter @trailfed/server migrate` before first start.
 - First real federation endpoint — the reference instance now publishes a discoverable ActivityPub `Person` at `/actors/stub` with an RSA public key, and WebFinger resolves `acct:stub@camp.trailfed.org` to it.
 - Monorepo layout (pnpm workspaces) with `server/` (Fedify + Hono) and `web/` (SvelteKit + MapLibre + PMTiles).
@@ -24,6 +26,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 - Self-hosted PMTiles basemap: Caddy serves `infra/pmtiles/region.pmtiles` at `/tiles/*` with CORS and byte-range support, and the web frontend loads it via the PMTiles protocol — falling back to the MapLibre demo tiles when no file is present. Cyprus is the reference region for the Phase 0 PoC.
 - Dependabot config for npm (pnpm workspace), GitHub Actions, and Docker dependency updates — weekly on Mondays, minor/patch grouped per ecosystem.
 - Dependabot auto-merge workflow — approves and enables squash auto-merge on dependabot PRs, so they land automatically once CI is green.
+- OSM PBF importer PoC: `pnpm --filter @trailfed/server import-pbf` downloads the Cyprus extract from Geofabrik, filters `tourism=camp_site` / `amenity=fuel` / `amenity=sanitary_dump_station`, and idempotently inserts a sample of POIs into the `places` table with ODbL attribution.
 
 ### Changed
 - Pull request template now enforces the progress-tracking rule — each PR has checkboxes for updating `NEXT_STEPS.md` and `CHANGELOG.md` (or marking the change as N/A for typo fixes / CI tweaks / dev-dep bumps).
