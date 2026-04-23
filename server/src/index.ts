@@ -18,6 +18,7 @@ import { fetchActorPublicKeyPem, verifyRequestSignature } from './federation/htt
 import { dispatchActivity, type ActivityHandler } from './federation/inbox.js';
 import { publishFromOutbox } from './federation/outbox.js';
 import { makeCreateHandler, persistPlaceFromActivity } from './federation/place.js';
+import { registerLocalActor } from './federation/registration.js';
 
 const log = pino({ name: 'trailfed-server' });
 
@@ -182,6 +183,43 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     });
     log.info({ keyId: result.keyId, outcome }, 'inbox delivery verified');
     return c.json({ accepted: true, outcome }, 202);
+  });
+
+  // Minimal user registration. Phase 1: creates an actor row with a fresh
+  // keypair and an argon2id password hash. Login / sessions are follow-up
+  // work — for now, the client is expected to remember the password and the
+  // operator uses it to mint signed outbox deliveries manually.
+  app.post('/api/register', async (c) => {
+    if (!options.db || !options.publicOrigin) {
+      return c.json({ error: 'registration not configured (no DB)' }, 501);
+    }
+    let input: unknown;
+    try {
+      input = await c.req.json();
+    } catch {
+      return c.json({ error: 'invalid JSON body' }, 400);
+    }
+    if (!input || typeof input !== 'object') {
+      return c.json({ error: 'expected object body' }, 400);
+    }
+    const { username, password, displayName, bio } = input as Record<string, unknown>;
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      return c.json({ error: 'username and password are required strings' }, 400);
+    }
+    const result = await registerLocalActor({
+      db: options.db,
+      username,
+      password,
+      domain: new URL(options.publicOrigin).host,
+      publicOrigin: options.publicOrigin,
+      displayName: typeof displayName === 'string' ? displayName : undefined,
+      bio: typeof bio === 'string' ? bio : undefined,
+    });
+    if (!result.ok) {
+      const status = result.reason === 'username_taken' ? 409 : 400;
+      return c.json({ error: result.reason }, status);
+    }
+    return c.json({ actor: result.actorUri }, 201);
   });
 
   // Outbox: client submits a JSON-LD activity, we persist it and fan out

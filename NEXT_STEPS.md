@@ -84,8 +84,8 @@ Scope per `docs/roadmap.md`: minimal working federated server with user accounts
 
 ### User accounts
 
-- [ ] Minimal registration endpoint (username + password via argon2id) creating an `actors` row with generated keypair.
-- [ ] WebFinger resolves any registered username (not just `stub`).
+- [x] Minimal registration endpoint (username + password via argon2id) creating an `actors` row with generated keypair.
+- [x] WebFinger resolves any registered username (not just `stub`).
 
 ### Moderation
 
