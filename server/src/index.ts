@@ -17,6 +17,7 @@ import { makeFollowHandler } from './federation/follow.js';
 import { fetchActorPublicKeyPem, verifyRequestSignature } from './federation/http-signature.js';
 import { dispatchActivity, type ActivityHandler } from './federation/inbox.js';
 import { publishFromOutbox } from './federation/outbox.js';
+import { makeCreateHandler, persistPlaceFromActivity } from './federation/place.js';
 
 const log = pino({ name: 'trailfed-server' });
 
@@ -79,7 +80,10 @@ export function createApp(options: CreateAppOptions = {}): Hono {
   const activityHandlers =
     options.activityHandlers ??
     (options.db && options.publicOrigin
-      ? { Follow: makeFollowHandler({ db: options.db, publicOrigin: options.publicOrigin }) }
+      ? {
+          Follow: makeFollowHandler({ db: options.db, publicOrigin: options.publicOrigin }),
+          Create: makeCreateHandler({ db: options.db }),
+        }
       : defaultActivityHandlers);
   const fetchPublicKeyPem = options.fetchPublicKeyPem ?? fetchActorPublicKeyPem;
   const app = new Hono();
@@ -206,6 +210,30 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     if (!activityInput || typeof activityInput !== 'object') {
       return c.json({ error: 'activity must be a JSON object' }, 400);
     }
+    // If this is a Create Place, persist the place locally first so it
+    // appears on our own map immediately and gets a stable URI we can reuse
+    // as the object id when fanning out.
+    const asObj = activityInput as Record<string, unknown>;
+    if (
+      asObj.type === 'Create' &&
+      asObj.object &&
+      typeof asObj.object === 'object' &&
+      (asObj.object as { type?: string }).type === 'Place'
+    ) {
+      const place = asObj.object as Record<string, unknown>;
+      if (!place.id) {
+        place.id = `${options.publicOrigin}/places/${crypto.randomUUID()}`;
+      }
+      await persistPlaceFromActivity({
+        db: options.db,
+        place: place as unknown as Parameters<typeof persistPlaceFromActivity>[0]['place'],
+        actorUri: `${options.publicOrigin}/actors/${actor.username}`,
+        originActorId: actor.id,
+        isLocal: true,
+        log,
+      });
+    }
+
     const result = await publishFromOutbox({
       db: options.db,
       actor,

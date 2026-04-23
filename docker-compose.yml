@@ -42,6 +42,7 @@ services:
       DATABASE_URL: postgres://trailfed:${POSTGRES_PASSWORD:-trailfed_dev_only}@postgres:5432/trailfed
       CENTRIFUGO_URL: http://centrifugo:8000
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:8090}
+      TRAILFED_OUTBOX_SECRET: ${TRAILFED_OUTBOX_SECRET:-}
     depends_on:
       postgres:
         condition: service_healthy
