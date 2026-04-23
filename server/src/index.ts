@@ -13,8 +13,10 @@ import {
   generateActorKeyPair,
   publicKeyPemFromPrivate,
 } from './federation/actor.js';
+import { makeFollowHandler } from './federation/follow.js';
 import { fetchActorPublicKeyPem, verifyRequestSignature } from './federation/http-signature.js';
 import { dispatchActivity, type ActivityHandler } from './federation/inbox.js';
+import { publishFromOutbox } from './federation/outbox.js';
 
 const log = pino({ name: 'trailfed-server' });
 
@@ -42,6 +44,16 @@ export interface CreateAppOptions {
   lookupActor?: ActorLookup;
   activityHandlers?: Record<string, ActivityHandler>;
   fetchPublicKeyPem?: (keyId: string) => Promise<string | null>;
+  /** DB handle — enables the outbox endpoint and the default Follow handler. */
+  db?: DbClient;
+  /** Public origin (e.g. `https://camp.trailfed.org`) — required with `db`. */
+  publicOrigin?: string;
+  /**
+   * Shared-secret bearer token required on `POST /actors/:u/outbox`. Without
+   * a secret the endpoint returns 501. This is a stopgap until real user
+   * auth — it lets the reference operator curl into their own outbox.
+   */
+  outboxSecret?: string;
 }
 
 // Fallback lookup used when no DB is wired up — serves the single `stub`
@@ -62,7 +74,13 @@ const fallbackLookup: ActorLookup = async (username) => {
 
 export function createApp(options: CreateAppOptions = {}): Hono {
   const lookupActor = options.lookupActor ?? fallbackLookup;
-  const activityHandlers = options.activityHandlers ?? defaultActivityHandlers;
+  // If the caller wires a DB + publicOrigin but provides no explicit handler
+  // map, install the default Follow → Accept handler for free.
+  const activityHandlers =
+    options.activityHandlers ??
+    (options.db && options.publicOrigin
+      ? { Follow: makeFollowHandler({ db: options.db, publicOrigin: options.publicOrigin }) }
+      : defaultActivityHandlers);
   const fetchPublicKeyPem = options.fetchPublicKeyPem ?? fetchActorPublicKeyPem;
   const app = new Hono();
 
@@ -162,6 +180,42 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     return c.json({ accepted: true, outcome }, 202);
   });
 
+  // Outbox: client submits a JSON-LD activity, we persist it and fan out
+  // signed deliveries. Guarded by a shared-secret bearer token so random
+  // traffic can't publish on behalf of the stub actor.
+  app.post('/actors/:username/outbox', async (c) => {
+    if (!options.db || !options.publicOrigin) {
+      return c.json({ error: 'outbox not configured (no DB)' }, 501);
+    }
+    if (!options.outboxSecret) {
+      return c.json({ error: 'outbox disabled (set TRAILFED_OUTBOX_SECRET)' }, 501);
+    }
+    const auth = c.req.header('authorization');
+    if (auth !== `Bearer ${options.outboxSecret}`) {
+      return c.json({ error: 'unauthorized' }, 401);
+    }
+    const actor = await lookupActor(c.req.param('username'));
+    if (!actor) return c.json({ error: 'unknown actor' }, 404);
+
+    let activityInput: unknown;
+    try {
+      activityInput = await c.req.json();
+    } catch {
+      return c.json({ error: 'invalid JSON body' }, 400);
+    }
+    if (!activityInput || typeof activityInput !== 'object') {
+      return c.json({ error: 'activity must be a JSON object' }, 400);
+    }
+    const result = await publishFromOutbox({
+      db: options.db,
+      actor,
+      activityInput: activityInput as Record<string, unknown>,
+      publicOrigin: options.publicOrigin,
+      log,
+    });
+    return c.json(result, 201);
+  });
+
   // GeoJSON FeatureCollection of POIs for the web map. Phase 0/1: simple
   // unfiltered SELECT; bbox/zoom filtering comes later.
   app.get('/api/places', async (c) => {
@@ -232,7 +286,13 @@ export function createDbActorLookup(db: DbClient, domain: string): ActorLookup {
  * fallback is used. Exposed from the module so the process bootstrap below
  * and future integration tests can share the path.
  */
-export async function bootstrapActorLookup(): Promise<ActorLookup | null> {
+export interface BootstrapResult {
+  lookup: ActorLookup;
+  db: DbClient;
+  publicOrigin: string;
+}
+
+export async function bootstrapActorLookup(): Promise<BootstrapResult | null> {
   if (!process.env.DATABASE_URL) return null;
   const { db } = createDbClient();
   const publicOrigin = process.env.PUBLIC_ORIGIN ?? '';
@@ -249,7 +309,7 @@ export async function bootstrapActorLookup(): Promise<ActorLookup | null> {
     bio: 'Phase 0 placeholder actor for the TrailFed reference instance.',
   });
   log.info({ domain }, 'seeded local stub actor');
-  return createDbActorLookup(db, domain);
+  return { lookup: createDbActorLookup(db, domain), db, publicOrigin };
 }
 
 export const app = createApp({});
@@ -260,11 +320,18 @@ export { buildStubActor };
 
 if (process.env.NODE_ENV !== 'test') {
   bootstrapActorLookup()
-    .then((lookup) => {
+    .then((boot) => {
       const port = Number(process.env.PORT ?? 3000);
-      const serverApp = lookup ? createApp({ lookupActor: lookup }) : app;
+      const serverApp = boot
+        ? createApp({
+            lookupActor: boot.lookup,
+            db: boot.db,
+            publicOrigin: boot.publicOrigin,
+            outboxSecret: process.env.TRAILFED_OUTBOX_SECRET,
+          })
+        : app;
       serve({ fetch: serverApp.fetch, port, hostname: '0.0.0.0' }, (info: { port: number }) => {
-        log.info({ port: info.port, dbBacked: Boolean(lookup) }, 'trailfed server listening');
+        log.info({ port: info.port, dbBacked: Boolean(boot) }, 'trailfed server listening');
       });
     })
     .catch((err) => {
