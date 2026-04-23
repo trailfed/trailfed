@@ -36,6 +36,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 - Centrifugo configuration migrated from v5 to v6 schema (top-level secret keys moved under `client.token` and `http_api`).
 
 ### Fixed
+- Caddy dev reverse proxy now routes `/actors/*` and `/healthz` to the server instead of the SvelteKit frontend; the old `/users/*` + `/inbox` + `/outbox` matchers from the pre-actor URL scheme were obsolete.
 - Runtime Docker images (`server/`, `web/`) now copy `/app/node_modules` so pnpm symlinks into `.pnpm/…` resolve at runtime; previously the containers failed with `ERR_MODULE_NOT_FOUND`.
 - `server/package.json` declares `@hono/node-server`, which is required for `serve()` to start the HTTP listener.
 - CI: dropped the redundant `pnpm/action-setup` version input that conflicted with `packageManager` in `package.json`; added `pnpm-lock.yaml` so CI can use cache and lockfile-based installs; added `prettier-plugin-svelte` so `format:check` can parse `.svelte` files; extended `.prettierignore` to keep human-authored prose in `docs/` out of the formatter.
