@@ -5,6 +5,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 ## [Unreleased] — Phase 0 scaffold
 
 ### Added
+- Map on the reference instance now renders the imported OSM POIs — `/api/places` returns a GeoJSON FeatureCollection from the `places` table and the web frontend draws colour-coded circles (campsites green, fuel orange, dump stations blue) with click-to-popup.
 - Database schema and migration runner (Drizzle ORM) for the nine core tables — actors, places, place_sources, activities, notes, checkins, follows, peers, live_locations — including PostGIS `geography(Point, 4326)` columns and spatial GIST indexes. Operators apply migrations with `pnpm --filter @trailfed/server migrate` before first start.
 - First real federation endpoint — the reference instance now publishes a discoverable ActivityPub `Person` at `/actors/stub` with an RSA public key, and WebFinger resolves `acct:stub@camp.trailfed.org` to it.
 - Monorepo layout (pnpm workspaces) with `server/` (Fedify + Hono) and `web/` (SvelteKit + MapLibre + PMTiles).

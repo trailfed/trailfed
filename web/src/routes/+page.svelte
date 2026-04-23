@@ -90,7 +90,7 @@
       zoom = 2;
     }
 
-    new maplibre.default.Map({
+    const map = new maplibre.default.Map({
       container: mapContainer,
       // Map constructor accepts a StyleSpecification object or a URL
       // string; we build one of each above depending on local tile
@@ -99,6 +99,46 @@
       style: style as any,
       center,
       zoom,
+    });
+
+    map.on('load', async () => {
+      try {
+        const res = await fetch('/api/places');
+        if (!res.ok) return;
+        const geojson = await res.json();
+        map.addSource('places', { type: 'geojson', data: geojson });
+        map.addLayer({
+          id: 'places-circles',
+          type: 'circle',
+          source: 'places',
+          paint: {
+            'circle-radius': 6,
+            'circle-color': [
+              'match',
+              ['get', 'category'],
+              'camp_site', '#2e7d32',
+              'fuel', '#ef6c00',
+              'dump_station', '#1565c0',
+              '#888',
+            ],
+            'circle-stroke-color': '#fff',
+            'circle-stroke-width': 1.5,
+          },
+        });
+        map.on('click', 'places-circles', (e) => {
+          const f = e.features?.[0];
+          if (!f) return;
+          const props = f.properties as { name: string; category: string };
+          new maplibre.default.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(`<strong>${props.name}</strong><br><small>${props.category}</small>`)
+            .addTo(map);
+        });
+        map.on('mouseenter', 'places-circles', () => (map.getCanvas().style.cursor = 'pointer'));
+        map.on('mouseleave', 'places-circles', () => (map.getCanvas().style.cursor = ''));
+      } catch (err) {
+        console.warn('[trailfed] failed to load /api/places', err);
+      }
     });
   });
 </script>

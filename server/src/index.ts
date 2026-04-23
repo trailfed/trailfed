@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { serve } from '@hono/node-server';
+import { sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { pino } from 'pino';
 
+import { createDbClient } from './db/client.js';
 import {
   buildStubActor,
   generateActorKeyPair,
@@ -97,6 +99,48 @@ export function createApp(keys: { publicKeyPem: string } = actorKeys): Hono {
     }
     log.info({ payload }, 'inbox delivery (not verified)');
     return c.json({ accepted: true }, 202);
+  });
+
+  // GeoJSON FeatureCollection of POIs for the web map. Phase 0/1: simple
+  // unfiltered SELECT; bbox/zoom filtering comes later.
+  app.get('/api/places', async (c) => {
+    const { db, sql: closer } = createDbClient();
+    try {
+      const rows = (await db.execute(sql`
+        SELECT
+          id::text AS id,
+          category,
+          names->>'default' AS name,
+          ST_X(geom::geometry) AS lon,
+          ST_Y(geom::geometry) AS lat,
+          source_type
+        FROM places
+        WHERE is_active = true
+        LIMIT 500
+      `)) as unknown as Array<{
+        id: string;
+        category: string;
+        name: string | null;
+        lon: number;
+        lat: number;
+        source_type: string | null;
+      }>;
+      return c.json({
+        type: 'FeatureCollection',
+        features: rows.map((r) => ({
+          type: 'Feature',
+          id: r.id,
+          geometry: { type: 'Point', coordinates: [Number(r.lon), Number(r.lat)] },
+          properties: {
+            category: r.category,
+            name: r.name ?? 'Unnamed',
+            source: r.source_type,
+          },
+        })),
+      });
+    } finally {
+      await closer.end({ timeout: 5 });
+    }
   });
 
   app.get('/nodeinfo/2.0', (c) =>
