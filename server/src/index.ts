@@ -17,6 +17,13 @@ import { makeFollowHandler } from './federation/follow.js';
 import { fetchActorPublicKeyPem, verifyRequestSignature } from './federation/http-signature.js';
 import { dispatchActivity, type ActivityHandler } from './federation/inbox.js';
 import { publishFromOutbox } from './federation/outbox.js';
+import {
+  addBlock,
+  isDomainBlocked,
+  listBlocks,
+  listRecentFlags,
+  makeFlagHandler,
+} from './federation/moderation.js';
 import { makeCreateHandler, persistPlaceFromActivity } from './federation/place.js';
 import { registerLocalActor } from './federation/registration.js';
 
@@ -84,6 +91,7 @@ export function createApp(options: CreateAppOptions = {}): Hono {
       ? {
           Follow: makeFollowHandler({ db: options.db, publicOrigin: options.publicOrigin }),
           Create: makeCreateHandler({ db: options.db }),
+          Flag: makeFlagHandler({ db: options.db }),
         }
       : defaultActivityHandlers);
   const fetchPublicKeyPem = options.fetchPublicKeyPem ?? fetchActorPublicKeyPem;
@@ -168,6 +176,19 @@ export function createApp(options: CreateAppOptions = {}): Hono {
       log.warn({ reason: result.reason }, 'inbox: signature verification failed');
       return c.json({ error: 'signature verification failed', reason: result.reason }, 401);
     }
+    // Block-list check. We reject *after* signature verification so a peer
+    // trying to impersonate a blocked domain's key won't smuggle traffic in.
+    if (options.db) {
+      try {
+        const signerHost = new URL(result.keyId).host;
+        if (await isDomainBlocked(options.db, signerHost)) {
+          log.warn({ signerHost }, 'inbox: delivery from blocked domain, dropping');
+          return c.json({ error: 'peer is blocked' }, 403);
+        }
+      } catch {
+        // Malformed keyId — let verification have already caught it.
+      }
+    }
     let payload: unknown = null;
     try {
       payload = rawBody.length > 0 ? JSON.parse(rawBody.toString('utf8')) : null;
@@ -183,6 +204,49 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     });
     log.info({ keyId: result.keyId, outcome }, 'inbox delivery verified');
     return c.json({ accepted: true, outcome }, 202);
+  });
+
+  // Moderation endpoints — admin-only. Same shared-secret guard as the
+  // outbox until real admin auth lands.
+  const requireAdmin = (auth: string | undefined) =>
+    options.outboxSecret && auth === `Bearer ${options.outboxSecret}`;
+
+  app.get('/api/moderation/flags', async (c) => {
+    if (!options.db) return c.json({ error: 'not configured' }, 501);
+    if (!requireAdmin(c.req.header('authorization'))) {
+      return c.json({ error: 'unauthorized' }, 401);
+    }
+    const rows = await listRecentFlags(options.db);
+    return c.json({ flags: rows });
+  });
+
+  app.get('/api/moderation/blocks', async (c) => {
+    if (!options.db) return c.json({ error: 'not configured' }, 501);
+    if (!requireAdmin(c.req.header('authorization'))) {
+      return c.json({ error: 'unauthorized' }, 401);
+    }
+    const domains = await listBlocks(options.db);
+    return c.json({ blocks: domains });
+  });
+
+  app.post('/api/moderation/blocks', async (c) => {
+    if (!options.db) return c.json({ error: 'not configured' }, 501);
+    if (!requireAdmin(c.req.header('authorization'))) {
+      return c.json({ error: 'unauthorized' }, 401);
+    }
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: 'invalid JSON body' }, 400);
+    }
+    const { domain } = (body ?? {}) as { domain?: unknown };
+    if (typeof domain !== 'string' || domain.length === 0) {
+      return c.json({ error: 'domain required' }, 400);
+    }
+    await addBlock(options.db, domain);
+    log.info({ domain }, 'moderation: domain added to block-list');
+    return c.json({ ok: true, domain }, 201);
   });
 
   // Minimal user registration. Phase 1: creates an actor row with a fresh
