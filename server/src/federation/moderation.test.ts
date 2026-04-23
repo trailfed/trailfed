@@ -4,22 +4,14 @@
 
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { pino } from 'pino';
 
 import { createDbClient } from '../db/client.js';
 import { runMigrations } from '../db/migrate.js';
 
-import {
-  addBlock,
-  isDomainBlocked,
-  listBlocks,
-  listRecentFlags,
-  makeFlagHandler,
-} from './moderation.js';
+import { addBlock, isDomainBlocked, listBlocks } from './moderation.js';
 
 const databaseUrl = process.env.DATABASE_URL;
 const describeIfDb = databaseUrl ? describe : describe.skip;
-const log = pino({ level: 'silent' });
 
 describeIfDb('moderation', () => {
   let client: ReturnType<typeof createDbClient>;
@@ -50,20 +42,6 @@ describeIfDb('moderation', () => {
     expect(listed).toContain(blockedDomain);
   });
 
-  it('Flag handler persists the activity', async () => {
-    const handler = makeFlagHandler({ db: client.db });
-    await handler(
-      {
-        id: flagUri,
-        type: 'Flag',
-        actor: 'https://remote.example/actors/reporter',
-        object: 'https://camp.trailfed.org/places/abc',
-        content: 'spam',
-      },
-      { signerKeyId: 'key', log },
-    );
-    const flags = await listRecentFlags(client.db);
-    const found = flags.find((f) => f.uri === flagUri);
-    expect(found).toBeTruthy();
-  });
+  // Flag-handler persistence moved into Fedify's inbox listener; covered by
+  // end-to-end test via signed delivery rather than a direct unit call.
 });
