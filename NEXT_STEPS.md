@@ -78,9 +78,9 @@ Scope per `docs/roadmap.md`: minimal working federated server with user accounts
 
 ### `Place` activity end-to-end
 
-- [ ] Extend Activity vocabulary with `Place` (name, category, geo) — update `docs/spec/federation.md` with the JSON-LD shape.
-- [ ] `Create Place` out of the outbox of an actor creates a row in `places` + `place_sources` (source=`activitypub`).
-- [ ] Inbound `Create Place` from a remote actor is stored locally and appears on the map with `source=remote`.
+- [x] Extend Activity vocabulary with `Place` (name, category, geo) — update `docs/spec/federation.md` with the JSON-LD shape.
+- [x] `Create Place` out of the outbox of an actor creates a row in `places` + `place_sources` (source=`activitypub`).
+- [x] Inbound `Create Place` from a remote actor is stored locally and appears on the map with `source=remote`.
 
 ### User accounts
 

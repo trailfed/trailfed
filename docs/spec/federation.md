@@ -157,6 +157,35 @@ TrailFed peers advertise supported geo capabilities in NodeInfo. This reduces pr
 - `trailfed:sourceConfidence`
 - `attributedTo`
 
+### Phase 1 minimum accepted shape
+
+The reference instance currently accepts the following minimal `Create Place` — wider `Place` fields are ignored by the Phase 1 persister but retained in `place_sources.fields`:
+
+```json
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "type": "Create",
+  "actor": "https://camp.trailfed.org/actors/stub",
+  "to": ["https://remote.example/actors/bob"],
+  "object": {
+    "type": "Place",
+    "name": "Kyrenia Harbour Camp",
+    "category": "camp_site",
+    "longitude": 33.3178,
+    "latitude": 35.3403
+  }
+}
+```
+
+Server behaviour on receipt:
+
+1. HTTP Signature verified (draft-cavage-12, rsa-sha256 + `Digest: SHA-256`).
+2. The `Create` dispatcher invokes the Place handler iff `object.type === "Place"` and `category` + `longitude` + `latitude` are present.
+3. Row inserted into `places` (`source_type = "activitypub"`, `origin_instance = host(actor)`). The original JSON-LD object is stored verbatim in `place_sources.fields` so future code can re-read non-Phase-1 fields without rewriting this endpoint.
+4. Reinsert by `uri` is a no-op (idempotent).
+
+Phase 1 `category` values recognised by the map layer: `camp_site`, `fuel`, `sanitary_dump_station` — matches the OSM importer taxonomy.
+
 ## Actor discovery and identity
 
 ### WebFinger (RFC 7033)

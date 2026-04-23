@@ -6,6 +6,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 
 ### Added
 - Map on the reference instance now renders the imported OSM POIs — `/api/places` returns a GeoJSON FeatureCollection from the `places` table and the web frontend draws colour-coded circles (campsites green, fuel orange, dump stations blue) with click-to-popup.
+- `Create Place` activity is now end-to-end: posting one to an actor's outbox persists the place locally (and will fan out to addressees), inbound `Create` deliveries whose `object.type === "Place"` are persisted with `source_type = "activitypub"`, and both show up on `/api/places`. Federation spec updated with the Phase 1 minimum JSON-LD shape.
 - Outbox endpoint (`POST /actors/:username/outbox`) persists a client-submitted ActivityPub activity, signs it with the actor's private key, and fans out deliveries to every addressee inbox. Guarded by a `TRAILFED_OUTBOX_SECRET` bearer token until real user auth lands.
 - Inbound `Follow` activities are now persisted to the `follows` table and auto-replied to with a signed `Accept` delivered to the follower's inbox. Remote actors are upserted into `actors` on first contact so FK references hold.
 - Local actors now live in the `actors` table — keys are persisted, and a `stub` row is seeded on first boot (when `DATABASE_URL` and `PUBLIC_ORIGIN` are set). `/actors/:username`, `/actors/:username/inbox` and WebFinger resolve arbitrary registered usernames from the DB; unknown usernames 404.
@@ -36,6 +37,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 - Centrifugo configuration migrated from v5 to v6 schema (top-level secret keys moved under `client.token` and `http_api`).
 
 ### Fixed
+- Caddy dev reverse proxy now routes `/actors/*` and `/healthz` to the server instead of the SvelteKit frontend; the old `/users/*` + `/inbox` + `/outbox` matchers from the pre-actor URL scheme were obsolete.
 - Runtime Docker images (`server/`, `web/`) now copy `/app/node_modules` so pnpm symlinks into `.pnpm/…` resolve at runtime; previously the containers failed with `ERR_MODULE_NOT_FOUND`.
 - `server/package.json` declares `@hono/node-server`, which is required for `serve()` to start the HTTP listener.
 - CI: dropped the redundant `pnpm/action-setup` version input that conflicted with `packageManager` in `package.json`; added `pnpm-lock.yaml` so CI can use cache and lockfile-based installs; added `prettier-plugin-svelte` so `format:check` can parse `.svelte` files; extended `.prettierignore` to keep human-authored prose in `docs/` out of the formatter.
