@@ -8,7 +8,7 @@
     encode zstd gzip
 
     # API & federation endpoints → Fedify server
-    @api path /.well-known/* /api/* /nodeinfo/* /users/* /inbox /outbox
+    @api path /.well-known/* /api/* /nodeinfo/* /actors/* /healthz
     handle @api {
         reverse_proxy server:3000
     }
