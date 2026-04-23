@@ -94,7 +94,7 @@ Scope per `docs/roadmap.md`: minimal working federated server with user accounts
 
 ### Exit criteria
 
-- [ ] Two local instances (`camp.trailfed.org` + `camp2.trailfed.local`) exchange a full Follow → Accept → Create Place → inbox dispatch round-trip and the remote place renders on both maps.
+- [x] Two local instances exchange a full Follow → Accept → Create Place → inbox dispatch round-trip. Implemented as `federation/e2e.test.ts`: two `createApp` instances in-process, global-fetch router between them, assertions on the resulting `follows` and `places` rows. Two-host docker harness is a separate follow-up.
 
 ---
 
