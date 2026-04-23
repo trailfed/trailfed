@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "migrate": "tsx src/db/migrate.ts",
+    "import-pbf": "tsx scripts/import-pbf.ts",
     "db:generate": "drizzle-kit generate && node scripts/fix-postgis-types.mjs"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "@hono/node-server": "^2.0.0",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.6.0",
+    "osm-pbf-parser-node": "^1.1.4",
     "pino": "^10.3.1",
     "postgres": "^3.4.9"
   },

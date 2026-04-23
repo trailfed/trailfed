@@ -1,0 +1,2 @@
+# Local PBF / dataset cache for one-shot import scripts (e.g. import-pbf.ts).
+.cache/
