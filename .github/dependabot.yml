@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: "/"
+    directory: '/'
     schedule:
       interval: weekly
       day: monday
@@ -10,13 +10,13 @@ updates:
     groups:
       minor-and-patch:
         patterns:
-          - "*"
+          - '*'
         update-types:
           - minor
           - patch
 
   - package-ecosystem: github-actions
-    directory: "/"
+    directory: '/'
     schedule:
       interval: weekly
       day: monday
@@ -25,13 +25,13 @@ updates:
     groups:
       minor-and-patch:
         patterns:
-          - "*"
+          - '*'
         update-types:
           - minor
           - patch
 
   - package-ecosystem: docker
-    directory: "/server"
+    directory: '/server'
     schedule:
       interval: weekly
       day: monday
@@ -40,13 +40,13 @@ updates:
     groups:
       minor-and-patch:
         patterns:
-          - "*"
+          - '*'
         update-types:
           - minor
           - patch
 
   - package-ecosystem: docker
-    directory: "/web"
+    directory: '/web'
     schedule:
       interval: weekly
       day: monday
@@ -55,7 +55,7 @@ updates:
     groups:
       minor-and-patch:
         patterns:
-          - "*"
+          - '*'
         update-types:
           - minor
           - patch

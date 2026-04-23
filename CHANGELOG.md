@@ -22,6 +22,7 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 - Progress-tracking rule in `CLAUDE.md`: `NEXT_STEPS.md` is the single source of "what's next", `CHANGELOG.md` is the single source of "what's done", Keep-a-Changelog 1.1 format.
 - Self-hosted PMTiles basemap: Caddy serves `infra/pmtiles/region.pmtiles` at `/tiles/*` with CORS and byte-range support, and the web frontend loads it via the PMTiles protocol — falling back to the MapLibre demo tiles when no file is present. Cyprus is the reference region for the Phase 0 PoC.
 - Dependabot config for npm (pnpm workspace), GitHub Actions, and Docker dependency updates — weekly on Mondays, minor/patch grouped per ecosystem.
+- Dependabot auto-merge workflow — approves and enables squash auto-merge on dependabot PRs, so they land automatically once CI is green.
 
 ### Changed
 - Pull request template now enforces the progress-tracking rule — each PR has checkboxes for updating `NEXT_STEPS.md` and `CHANGELOG.md` (or marking the change as N/A for typo fixes / CI tweaks / dev-dep bumps).
