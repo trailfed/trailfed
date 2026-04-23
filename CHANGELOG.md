@@ -4,6 +4,10 @@ All notable changes to TrailFed will be documented here. Format: [Keep a Changel
 
 ## [Unreleased] — Phase 0 scaffold
 
+### Changed
+- **Federation layer refactored onto [@fedify/fedify](https://fedify.dev).** The hand-rolled HTTP Signature verifier/signer, inbox dispatcher, follow/accept round-trip, outbox delivery, WebFinger responder, and NodeInfo dispatcher are all deleted — Fedify owns HTTP Signatures (draft-cavage-12 + RFC 9421 + Linked Data Signatures), JSON-LD context, and signed activity delivery now. The server keeps only persistence callbacks (actor lookup, keypair import, Follow/Create-Place/Flag inbox listeners that write to our schema) and business routes (registration, outbox publish, moderation admin). ~1,100 lines of custom federation code removed. Node base image bumped to 22 (Fedify requirement).
+- Actor keys now stored as RSASSA-PKCS1-v1_5 JWK JSON in `actors.public_key_jwk` / `private_key_jwk` (migration `0002`). Generated via Fedify's `generateCryptoKeyPair` + `exportJwk`. Legacy PEM columns kept for backward compatibility but no longer used; any legacy PEM-only row is upgraded in place on next `ensureLocalActor` call.
+
 ### Added
 - Map on the reference instance now renders the imported OSM POIs — `/api/places` returns a GeoJSON FeatureCollection from the `places` table and the web frontend draws colour-coded circles (campsites green, fuel orange, dump stations blue) with click-to-popup.
 - Two-instance federation round-trip proven: `federation/e2e.test.ts` spins up two `createApp` instances in-process, wires their HTTP traffic to each other through a global-fetch router, and verifies that a Follow published on instance A arrives on B, Accept replies back, and a `Create Place` from A is persisted on B with `source_type = 'activitypub'`.

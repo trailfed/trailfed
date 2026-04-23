@@ -15,6 +15,13 @@
       "when": 1776928099793,
       "tag": "0001_light_stone_men",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776935357328,
+      "tag": "0002_pale_leper_queen",
+      "breakpoints": true
     }
   ]
 }

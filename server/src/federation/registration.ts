@@ -4,8 +4,8 @@ import { hash as argon2Hash } from '@node-rs/argon2';
 import { and, eq } from 'drizzle-orm';
 
 import type { DbClient } from '../db/client.js';
-import { generateActorKeyPair } from './actor.js';
 import { actors } from '../db/schema.js';
+import { generateActorKeys } from './keys.js';
 
 /**
  * Register a new local actor (username + password). Enforces a minimum
@@ -43,7 +43,7 @@ export async function registerLocalActor(params: {
     return { ok: false, reason: 'username_taken' };
   }
 
-  const keys = generateActorKeyPair();
+  const keys = await generateActorKeys();
   // Argon2id defaults from OWASP guidance (m=19 MiB, t=2, p=1) — safe for
   // interactive login and fast enough for a signup handler.
   const passwordHash = await argon2Hash(params.password, {
@@ -60,8 +60,8 @@ export async function registerLocalActor(params: {
     domain: params.domain,
     displayName: params.displayName ?? null,
     bio: params.bio ?? null,
-    publicKey: keys.publicKeyPem,
-    privateKey: keys.privateKeyPem,
+    publicKeyJwk: keys.publicKeyJwk,
+    privateKeyJwk: keys.privateKeyJwk,
     passwordHash,
     isLocal: true,
     inboxUrl: `${actorId}/inbox`,

@@ -7,8 +7,6 @@ import type { Logger } from 'pino';
 
 import type { DbClient } from '../db/client.js';
 
-import type { ActivityHandler } from './inbox.js';
-
 /**
  * Shape of a `Place` ActivityStreams object we understand. Intentionally
  * minimal — longitude/latitude straight off ActivityStreams 2.0, `category`
@@ -128,34 +126,7 @@ function safeHost(uri: string): string | null {
   }
 }
 
-/**
- * Inbound `Create` handler — if the object is a `Place`, persist it.
- * Other Create variants (Note, …) are left for later handlers.
- */
-export function makeCreateHandler(deps: { db: DbClient }): ActivityHandler {
-  return async (activity, ctx) => {
-    const object = activity.object as PlaceObject | { type?: string } | null;
-    if (!object || typeof object !== 'object' || object.type !== 'Place') {
-      ctx.log.info(
-        { type: (object as { type?: string } | null)?.type },
-        'Create: not a Place, skipping',
-      );
-      return;
-    }
-    const actorUri = typeof activity.actor === 'string' ? activity.actor : activity.actor?.id;
-    if (!actorUri) return;
-    const persisted = await persistPlaceFromActivity({
-      db: deps.db,
-      place: object as PlaceObject,
-      actorUri,
-      isLocal: false,
-      log: ctx.log,
-    });
-    if (persisted) {
-      ctx.log.info(
-        { placeId: persisted.id.toString(), uri: persisted.uri },
-        'Create Place persisted',
-      );
-    }
-  };
-}
+// Inbound Place persistence is now triggered by Fedify's Create inbox
+// listener — see `federation/fedify.ts`. This file keeps only the pure
+// persistence function, which is reused by both the inbox listener and the
+// outbox publish path.

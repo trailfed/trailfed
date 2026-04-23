@@ -44,6 +44,8 @@ export const actors = pgTable(
     avatarUrl: text('avatar_url'),
     publicKey: text('public_key'),
     privateKey: text('private_key'),
+    publicKeyJwk: jsonb('public_key_jwk'),
+    privateKeyJwk: jsonb('private_key_jwk'),
     passwordHash: text('password_hash'),
     isLocal: boolean('is_local').default(false),
     followersUrl: text('followers_url'),

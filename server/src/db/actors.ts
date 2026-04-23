@@ -2,15 +2,15 @@
 
 import { and, eq } from 'drizzle-orm';
 
-import { generateActorKeyPair } from '../federation/actor.js';
+import { generateActorKeys, type Jwk } from '../federation/keys.js';
 
 import type { DbClient } from './client.js';
 import { actors } from './schema.js';
 
 /**
- * A local actor row, narrowed to the fields federation cares about. Fields
- * not in this type (e.g. avatar, bio) may still be present in the DB row —
- * we just don't rely on them at the federation layer.
+ * A local actor row narrowed to what federation cares about. Keys are JWK
+ * JSON (generated/imported by Fedify primitives); there's no custom crypto
+ * here.
  */
 export interface LocalActorRecord {
   id: bigint;
@@ -18,25 +18,17 @@ export interface LocalActorRecord {
   domain: string;
   displayName: string | null;
   bio: string | null;
-  publicKeyPem: string;
-  privateKeyPem: string;
+  publicKeyJwk: Jwk;
+  privateKeyJwk: Jwk;
 }
 
 /**
- * Insert-or-fetch a remote actor by its ActivityPub URI. Used when we receive
- * a Follow from a host we haven't seen before — we need a row so the
- * `follows` FK has something to reference. Key material isn't fetched here
- * (HTTP Signature verification already fetched it); we can lazily pull it
- * on outbound deliveries if needed.
+ * Insert-or-fetch a remote actor by its ActivityPub URI. Used when we
+ * receive a Follow from a host we haven't seen before.
  */
 export async function ensureRemoteActor(
   db: DbClient,
-  params: {
-    uri: string;
-    username: string;
-    domain: string;
-    inboxUrl?: string;
-  },
+  params: { uri: string; username: string; domain: string; inboxUrl?: string },
 ): Promise<{ id: bigint; uri: string }> {
   const existing = await db
     .select({ id: actors.id, uri: actors.uri })
@@ -69,27 +61,21 @@ export async function findLocalActorByUsername(
     .where(and(eq(actors.username, username), eq(actors.domain, domain), eq(actors.isLocal, true)))
     .limit(1);
   const row = rows[0];
-  if (!row || !row.publicKey || !row.privateKey) return null;
+  if (!row || !row.publicKeyJwk || !row.privateKeyJwk) return null;
   return {
     id: row.id,
     username: row.username,
     domain: row.domain,
     displayName: row.displayName,
     bio: row.bio,
-    publicKeyPem: row.publicKey,
-    privateKeyPem: row.privateKey,
+    publicKeyJwk: row.publicKeyJwk as Jwk,
+    privateKeyJwk: row.privateKeyJwk as Jwk,
   };
 }
 
 /**
- * Ensure a local actor exists for `(username, domain)`. If missing, mint a
- * fresh RSA keypair and insert a row. Idempotent — safe to call on every
- * boot.
- *
- * `publicOrigin` is used to seed the stable URI / inbox / outbox columns.
- * The handlers still build URLs per-request from the incoming origin, so if
- * `PUBLIC_ORIGIN` changes the row's `uri` drifts — that's a known Phase 1
- * limitation; `uri` should be treated as a hint, not the source of truth.
+ * Ensure a local actor exists. If missing, Fedify mints a fresh RSA keypair
+ * (JWK) and we persist it. Idempotent — safe to call on every boot.
  */
 export async function ensureLocalActor(
   db: DbClient,
@@ -104,8 +90,10 @@ export async function ensureLocalActor(
   const existing = await findLocalActorByUsername(db, params.username, params.domain);
   if (existing) return existing;
 
-  const keys = generateActorKeyPair();
+  const keys = await generateActorKeys();
   const actorId = `${params.publicOrigin}/actors/${params.username}`;
+
+  // Upsert: backfill JWK for legacy rows that were seeded with PEM-only keys.
   const inserted = await db
     .insert(actors)
     .values({
@@ -114,13 +102,20 @@ export async function ensureLocalActor(
       domain: params.domain,
       displayName: params.displayName ?? null,
       bio: params.bio ?? null,
-      publicKey: keys.publicKeyPem,
-      privateKey: keys.privateKeyPem,
+      publicKeyJwk: keys.publicKeyJwk,
+      privateKeyJwk: keys.privateKeyJwk,
       isLocal: true,
       inboxUrl: `${actorId}/inbox`,
       outboxUrl: `${actorId}/outbox`,
       followersUrl: `${actorId}/followers`,
       followingUrl: `${actorId}/following`,
+    })
+    .onConflictDoUpdate({
+      target: actors.uri,
+      set: {
+        publicKeyJwk: keys.publicKeyJwk,
+        privateKeyJwk: keys.privateKeyJwk,
+      },
     })
     .returning();
   const row = inserted[0];
@@ -130,7 +125,7 @@ export async function ensureLocalActor(
     domain: row.domain,
     displayName: row.displayName,
     bio: row.bio,
-    publicKeyPem: keys.publicKeyPem,
-    privateKeyPem: keys.privateKeyPem,
+    publicKeyJwk: keys.publicKeyJwk,
+    privateKeyJwk: keys.privateKeyJwk,
   };
 }

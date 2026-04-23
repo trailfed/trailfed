@@ -40,8 +40,8 @@ describeIfDb('ensureLocalActor', () => {
       displayName: 'Ensure Test',
     });
     expect(first.username).toBe(testUsername);
-    expect(first.publicKeyPem).toContain('BEGIN PUBLIC KEY');
-    expect(first.privateKeyPem).toContain('PRIVATE KEY');
+    expect(first.publicKeyJwk).toMatchObject({ kty: 'RSA' });
+    expect(first.privateKeyJwk).toMatchObject({ kty: 'RSA' });
 
     const second = await ensureLocalActor(client.db, {
       username: testUsername,
@@ -49,8 +49,7 @@ describeIfDb('ensureLocalActor', () => {
       publicOrigin: `https://${testDomain}`,
     });
     expect(second.id).toBe(first.id);
-    expect(second.publicKeyPem).toBe(first.publicKeyPem);
-    expect(second.privateKeyPem).toBe(first.privateKeyPem);
+    expect(second.publicKeyJwk).toEqual(first.publicKeyJwk);
 
     const looked = await findLocalActorByUsername(client.db, testUsername, testDomain);
     expect(looked?.id).toBe(first.id);

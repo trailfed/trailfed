@@ -54,7 +54,7 @@ describeIfDb('registerLocalActor', () => {
     expect(rows.length).toBe(1);
     expect(rows[0].isLocal).toBe(true);
     expect(rows[0].passwordHash).toBeTruthy();
-    expect(rows[0].publicKey).toContain('BEGIN PUBLIC KEY');
+    expect(rows[0].publicKeyJwk).toMatchObject({ kty: 'RSA' });
 
     const verified = await argon2Verify(rows[0].passwordHash!, password);
     expect(verified).toBe(true);

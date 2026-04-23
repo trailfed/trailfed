@@ -5,8 +5,6 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import type { DbClient } from '../db/client.js';
 import { activities, peers } from '../db/schema.js';
 
-import type { ActivityHandler } from './inbox.js';
-
 /** Returns true if `domain` is on the instance block-list (peers.trust_level = 'blocklist'). */
 export async function isDomainBlocked(db: DbClient, domain: string): Promise<boolean> {
   const rows = await db
@@ -37,35 +35,8 @@ export async function listBlocks(db: DbClient): Promise<string[]> {
   return rows.map((r) => r.domain);
 }
 
-/**
- * Handler for inbound `Flag` activities (reports). Persists the activity so
- * a moderator can review it via `GET /api/moderation/flags`. We don't act on
- * the report automatically — moderation is a human step.
- */
-export function makeFlagHandler(deps: { db: DbClient }): ActivityHandler {
-  return async (activity, ctx) => {
-    const actorUri = typeof activity.actor === 'string' ? activity.actor : activity.actor?.id;
-    if (!actorUri) return;
-    const uri =
-      typeof activity.id === 'string' ? activity.id : `urn:flag:${new Date().toISOString()}`;
-    try {
-      await deps.db.insert(activities).values({
-        uri,
-        type: 'Flag',
-        actorId: null,
-        objectUri:
-          typeof activity.object === 'string'
-            ? activity.object
-            : ((activity.object as { id?: string } | null)?.id ?? null),
-        data: activity as Record<string, unknown>,
-        publishedAt: new Date(),
-      });
-      ctx.log.info({ uri, actorUri }, 'Flag activity recorded for moderator review');
-    } catch (err) {
-      ctx.log.warn({ err, uri }, 'Flag activity: insert failed (likely duplicate)');
-    }
-  };
-}
+// Flag inbound persistence moved to the Fedify Create/Flag inbox listener
+// in `federation/fedify.ts`. This file keeps only the admin-facing helpers.
 
 export async function listRecentFlags(db: DbClient, limit = 50) {
   return db
