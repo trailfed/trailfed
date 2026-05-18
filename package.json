@@ -24,9 +24,9 @@
     "format:check": "prettier --check \"**/*.{ts,js,svelte,json,md,yml,yaml}\""
   },
   "devDependencies": {
-    "@types/node": "^25.6.2",
+    "@types/node": "^25.8.0",
     "prettier": "^3.3.0",
-    "prettier-plugin-svelte": "^3.2.6",
+    "prettier-plugin-svelte": "^3.5.2",
     "typescript": "^5.5.0"
   }
 }
