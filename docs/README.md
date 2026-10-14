@@ -2,32 +2,30 @@
 
 ## Start here
 
-- [Vision](vision.md) — what we're building
-- [Positioning](positioning.md) — how we compare to existing travel apps
-- [Roadmap](roadmap.md) — seven phases to v1.0
+- [Vision](vision.md) — what we're building and why (v0.2)
+- [Positioning](positioning.md) — prior art and comparison
+- [Roadmap](roadmap.md) — phases to spec 1.0
 
-## Architecture
+## Specification (v0.2)
 
-- [Overview](architecture/overview.md) — components, data flows, tables
-- [Tech stack](architecture/stack.md) — choices and rationale
-
-## Specification
-
-- [Federation](spec/federation.md) — ActivityPub + TrailFed geo extensions
-- [OSM integration](spec/osm.md) — ODbL-compliant import/export
-- [Privacy model](spec/privacy.md) — data minimisation, location handling
+- [Core protocol](spec/core.md) — entries, discovery, feed, push, identity, trust, privacy, licensing
+- [Status resolution](spec/status-resolution.md) — normative status rule
+- [JSON Schemas](spec/schema/) — `entry.schema.json`, `discovery.schema.json`
+- [Test vectors](spec/vectors/) — conformance cases for status resolution
+- [OSM integration](spec/osm.md) — identity, vocabulary, ODbL
+- [Privacy model](spec/privacy.md) — protocol-level privacy, and the v0.1 threat model
+- [ActivityPub bridge](spec/federation.md) — optional; deprecated v0.1 extensions
 
 ## Decisions
 
-- [ADRs](adr/) — Architecture Decision Records
+- [ADRs](adr/) — Architecture Decision Records; [ADR-0010](adr/0010-sync-protocol-first.md) explains the v0.2 change of course
+
+## Reference server (v0.1, frozen)
+
+- [Architecture overview](architecture/overview.md) — v0.2 protocol architecture, then the v0.1 server
+- [Tech stack](architecture/stack.md)
 
 ## Project
 
 - [Risks](risks.md) — known risks and mitigations
 - [Funding](funding.md) — how the project is and will be funded
-
-## Internal (historical / working documents)
-
-- [Fact-check checklist](internal/fact-check/checklist.md)
-- [Fact-check findings](internal/fact-check/findings.md)
-- [Name selection history](internal/name-selection.md) — superseded

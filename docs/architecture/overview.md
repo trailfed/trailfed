@@ -1,11 +1,44 @@
 ---
 title: TrailFed Architecture
-version: 0.1
+version: 0.2
 status: draft
-updated: 2026-04-22
+updated: 2026-10-14
 ---
 
 # 05. Detailed Architecture
+
+## v0.2: protocol architecture
+
+Since [ADR-0010](../adr/0010-sync-protocol-first.md) TrailFed has no required server. Each
+participating app implements the [core protocol](../spec/core.md) inside its own stack:
+
+```
+   App A (e.g. OpenVan.camp)           App B                          App C (joins later)
+ ┌──────────────────────────┐   ┌──────────────────────────┐   ┌──────────────────────────┐
+ │ own users, UI, database  │   │ own users, UI, database  │   │ own users, UI, database  │
+ │                          │   │                          │   │                          │
+ │ /.well-known/trailfed    │   │ /.well-known/trailfed    │   │ reads A and B from the   │
+ │ GET /trailfed/feed  ◄────┼───┼── polls A's feed         │   │ very first entry         │
+ │ polls B's feed ──────────┼──►│ GET /trailfed/feed       │   │ (backfill), then follows │
+ │ POST /trailfed/inbox ◄───┼───┼── optional signed push   │   │ cursors                  │
+ │                          │   │                          │   │                          │
+ │ status = resolve(entries)│   │ status = resolve(entries)│   │ status = resolve(entries)│
+ └──────────────────────────┘   └──────────────────────────┘   └──────────────────────────┘
+         same entries + same rule  ⇒  same status on every site
+```
+
+What each participant stores (any schema it likes):
+
+- its own entries, in recording order, served as the feed;
+- entries fetched from trusted participants, with the cursor per participant;
+- derived state per place group: canonical URI, status output, resolved attributes.
+
+What is shared: only entries. Status and canonical URIs are recomputed locally by the same rule.
+
+## Reference server (v0.1, frozen)
+
+Everything below describes the v0.1 reference server (ActivityPub, social features, live location
+design). It is kept as a demo and for the optional [ActivityPub bridge](../spec/federation.md).
 
 ## High-level diagram
 

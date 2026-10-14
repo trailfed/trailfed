@@ -1,20 +1,49 @@
 # TrailFed
 
-**Federated geo-social protocol for travellers.**
+**An open protocol for keeping travel place data in sync between apps.**
 
-TrailFed is an open-source, ActivityPub-based protocol and reference server for people on the move: van-lifers, overlanders, sailors, cyclists, anglers, hikers and digital nomads. Each instance is self-hosted and federates places of interest (POI), check-ins and travel tracks with trusted peers — the Mastodon model applied to travel.
+A traveller marks a spot as closed in one app. Within minutes every connected app shows it closed —
+the same status, for the same reason, with credit to the app where it was reported.
 
-> **Status:** Phase 0 — not production ready. See [docs/roadmap.md](docs/roadmap.md).
+TrailFed lets independent vanlife, RV and overland apps share one current picture of places —
+campsites, overnight spots, water, dump stations — while each keeps its own users, UI and database.
+Apps exchange **facts** (observations), never overwrite each other, and derive each place's status
+by **one shared rule** pinned by test vectors.
+
+> **Status:** v0.2 draft specification. The v0.1 ActivityPub reference server is kept as a frozen
+> demo. See [docs/roadmap.md](docs/roadmap.md) and [ADR-0010](docs/adr/0010-sync-protocol-first.md)
+> for why the project changed course.
 
 ## Why
 
-Today travellers juggle 5–7 closed platforms (Park4Night, iOverlander, Campendium, Polarsteps, Navily…), each owning its own silo of reviews and locations. TrailFed provides a shared federation layer so that:
+Travellers juggle Park4Night, iOverlander, Campendium and many smaller apps; each owns an island of
+data. A closure reported in one app never reaches the others, and a new app starts from zero.
+Central "open databases" failed because no app hands its data to someone else. TrailFed keeps the
+data where it is and agrees only on the format and the rule:
 
-- **Any community can run its own instance** — vanlife, fishing, motorbike touring, sea-faring — and still exchange data with allied peers.
-- **Your data lives where you do.** No centralised operator to shut you down or sell your location history.
-- **OpenStreetMap stays primary** for base geography; TrailFed adds the human layer on top — reviews, ephemeral amenities, check-ins, travel stories.
+- **Facts, not records** — `place`, `observation`, `link`, `retraction` entries, append-only.
+- **Same facts → same status** — a normative [status resolution](docs/spec/status-resolution.md)
+  with [test vectors](docs/spec/vectors/).
+- **Catch-up built in** — a cursor feed with the full history: a new app gets everything on day one.
+- **OpenStreetMap as the base** — OSM tags as vocabulary, OSM ids as identity.
+- **Credit and licence per entry** — every app is attributed wherever its data is shown.
+- **Small** — a Reader or Publisher fits in a week in any stack.
 
-## 5-minute quickstart (dev)
+## Read the spec
+
+- [Core protocol](docs/spec/core.md) — entries, discovery, feed, push, identity, trust, privacy, licensing
+- [Status resolution](docs/spec/status-resolution.md) — when a spot counts as closed (normative)
+- [JSON Schemas](docs/spec/schema/) and [test vectors](docs/spec/vectors/)
+- Reference implementation of the status rule: [`server/src/protocol/status.ts`](server/src/protocol/status.ts)
+
+Run the vectors:
+
+```bash
+pnpm install
+pnpm --filter @trailfed/server exec vitest run src/protocol
+```
+
+## Reference server demo (v0.1, frozen)
 
 ```bash
 git clone https://github.com/trailfed/trailfed.git
@@ -36,15 +65,13 @@ See [docs/deployment.md](docs/deployment.md) for production.
 
 ## Documentation
 
-- [Vision](docs/vision.md) — what we're building and why
-- [Positioning](docs/positioning.md) — how TrailFed compares to existing solutions
-- [Architecture overview](docs/architecture/overview.md)
-- [Tech stack](docs/architecture/stack.md)
-- [Federation spec](docs/spec/federation.md) — ActivityPub + geo extensions
-- [OSM integration](docs/spec/osm.md) — ODbL-compliant import/export
-- [Privacy model](docs/spec/privacy.md)
-- [Roadmap](docs/roadmap.md) — seven phases to v1.0
-- [Architecture decisions](docs/adr/) — ADRs
+- [Vision](docs/vision.md) — what we're building and why (v0.2)
+- [Positioning](docs/positioning.md) — prior art and how TrailFed differs
+- [Core protocol](docs/spec/core.md) and [status resolution](docs/spec/status-resolution.md)
+- [OSM integration](docs/spec/osm.md) — identity, vocabulary, ODbL
+- [Privacy](docs/spec/privacy.md) — per-place pseudonyms, erasure
+- [ActivityPub bridge](docs/spec/federation.md) — optional announcements to the Fediverse
+- [Roadmap](docs/roadmap.md) · [Risks](docs/risks.md) · [Architecture decisions](docs/adr/)
 
 ## Contributing
 
@@ -54,7 +81,7 @@ Good first issues are labelled `good-first-issue`. All participants must follow 
 
 ## License
 
-TrailFed is licensed under the [GNU Affero General Public License v3.0 or later](LICENSE). This protects the project from closed-source SaaS forks while remaining compatible with the ActivityPub ecosystem.
+Code is licensed under the [GNU Affero General Public License v3.0 or later](LICENSE). Data exchanged over the protocol carries its own licence per entry ([ADR-0011](docs/adr/0011-per-entry-data-license.md)); implementing the protocol in your own app does not require using our code.
 
 ## Security
 

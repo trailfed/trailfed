@@ -1,13 +1,18 @@
 ---
 title: Risks and mitigations
-version: 0.1
+version: 0.2
 status: draft
-updated: 2026-04-22
+updated: 2026-10-14
 ---
 
 # 11. Risks and mitigations
 
 An honest list of what can go wrong and what we are doing to reduce the risk.
+
+> **v0.2 note.** After [ADR-0010](adr/0010-sync-protocol-first.md) live location, check-ins and the
+> social timeline are out of the core protocol. R1 (stalking), R7 (background geolocation) and much
+> of R3/R6 now apply only to participants that build such features in their own apps. R2 (scope
+> creep) is the risk that actually materialised in v0.1. New protocol risks are R18–R22.
 
 ## R1: Stalking / preying via live location
 
@@ -274,7 +279,96 @@ An honest list of what can go wrong and what we are doing to reduce the risk.
 
 **Residual risk:** low if the pipeline is followed.
 
-## Risk matrix
+## R18: No second participant
+
+**Severity:** 🔴 High — a sync protocol with one participant is just an API.
+
+**Description:** no independent app agrees to publish or read a feed; the protocol never leaves
+OpenVan.camp.
+
+**Mitigation:**
+- Day-one value for joiners: full backfill, attribution with links back, no lock-in
+- Implementation effort kept to "a week in any stack"; PHP/TS libraries
+- Start with small independent apps that cannot match big platforms' coverage alone
+- Do not depend on closed platforms joining
+
+**Residual risk:** high until Phase 3.
+
+## R19: Status gaming by a participant
+
+**Severity:** 🟠 High — wrong "closed" or "open" statuses mislead travellers.
+
+**Description:** a participant (or its users) fabricates "independent" reports to close a competitor's
+campsite or reopen a closed spot.
+
+**Mitigation:**
+- Per-participant trust levels (`trusted` / `review` / `blocked`)
+- Strong reports require evidence (photo/document) that readers can inspect
+- Attribution shows where every decisive report came from
+- Retractions propagate; abusive participants can be blocked by everyone
+
+**Residual risk:** medium.
+
+## R20: Divergent status across participants
+
+**Severity:** 🟡 Medium — undermines the core promise.
+
+**Description:** participants implement the rule differently, use different constants, or apply
+different trust lists, so the same spot shows different statuses.
+
+**Mitigation:**
+- Normative algorithm + test vectors; conformance runner (Phase 4)
+- Constants change only with a minor version and new vectors
+- Divergence from trust lists is documented as the only allowed difference
+
+**Residual risk:** low for implementation bugs, accepted for trust differences.
+
+## R21: Location history leak through contributor ids
+
+**Severity:** 🟠 High — a stable pseudonym across places reveals a traveller's route.
+
+**Mitigation:**
+- Per-place pseudonyms (`HMAC(secret, user_id + place)`) — independence is only counted within one place
+- Hour rounding and publishing delay for `observed_at`
+- EXIF stripping for photos
+
+**Residual risk:** low if publishers follow the SHOULDs; checked by the validator where possible.
+
+## R22: Licence mismatch between participants
+
+**Severity:** 🟡 Medium.
+
+**Description:** a participant publishes data it has no right to (scraped from a closed platform), or
+readers mix ODbL and CC-BY data incorrectly.
+
+**Mitigation:**
+- Per-entry licence and attribution ([ADR-0011](adr/0011-per-entry-data-license.md))
+- Explicit MUST NOT on republishing closed-platform data
+- Expert review of the ODbL / CC-BY boundary before 1.0
+
+**Residual risk:** medium.
+
+## Risk matrix (v0.2)
+
+| Risk | Severity | Likelihood | Net Priority |
+|---|---|---|---|
+| R18 No second participant | High | High | 🔴🔴🔴 |
+| R19 Status gaming | High | Medium | 🟠🟠 |
+| R21 Location history leak | High | Low | 🟠 |
+| R2 Scope creep | High | Medium | 🟠🟠 |
+| R11 Maintainer burnout | High | Medium | 🟠🟠 |
+| R16 ODbL/license contamination | High | Medium | 🟠🟠 |
+| R22 Licence mismatch | Medium | Medium | 🟡🟡 |
+| R20 Divergent status | Medium | Medium | 🟡🟡 |
+| R5 Duplicate POIs | Medium | High | 🟡🟡 |
+| R12 Data quality | Medium | Medium | 🟡 |
+| R8 GDPR violations | High | Low | 🟡 |
+| R17 Overpass misuse | Medium | Low | 🟡 |
+| R1 Stalking | Critical | Out of scope in v0.2 | — |
+| R7 Geolocation restrictions | High | Out of scope in v0.2 | — |
+
+## Risk matrix (v0.1, historical)
+
 
 | Risk | Severity | Likelihood | Net Priority |
 |---|---|---|---|

@@ -1,23 +1,40 @@
 ---
 title: TrailFed uniqueness analysis
-version: 0.1
+version: 0.2
 status: draft
-updated: 2026-04-22
+updated: 2026-10-14
 ---
 
 # 02. Uniqueness and comparison with existing projects
 
-## TL;DR
+## TL;DR (v0.2)
 
-No production-ready project was found that combines, in a single federated travel product:
-1. Social layer (Mastodon-style)
-2. POI federation (Places)
-3. Privacy-aware check-ins / location metadata
-4. Travel tracks (GPX + check-ins)
+No open protocol was found that lets independent travel apps keep **one shared, current status of
+places** — with backfill for newcomers, a common rule for "closed", per-entry licensing and
+attribution. That is TrailFed's gap in v0.2.
 
-We do not treat live location as a mandatory MVP differentiator: it is a high-risk feature and can only appear after a dedicated safety review. The closest projects cover 1–2 of these functions. The green field for TrailFed is specifically **travel POI federation + map-first UX + moderation and import tooling**.
+Social, check-ins and tracks (the v0.1 framing) are out of the core; the comparison of social
+projects below is kept for context and for the optional ActivityPub bridge.
 
-## Comparison table
+## Prior art for the sync layer (v0.2)
+
+| Project / standard | What it solves | What TrailFed takes |
+|---|---|---|
+| **OpenStreetMap tagging** | Shared vocabulary for campsites, water, dump stations | Category and attribute keys; OSM element id as the strongest identity signal |
+| **OSM minutely replication diffs** | Incremental change stream for a huge dataset | The idea that catch-up by sequence number is the backbone of sync |
+| **RPDE** (OpenActive) | Paged change feed with opaque cursor, tombstones | Feed design almost verbatim ([core §5.1](spec/core.md#51-feed-pull-required-for-publishers)) |
+| **OCPI** (EV charging roaming) | Competing operators exchange charge-point locations and status via push/PATCH | Proof that competitors do share location status when there is a mutual gain; push + credentials ideas |
+| **GBFS** (bike share) | Simple public feeds with discovery file | `/.well-known` discovery, "small enough to implement in a week" |
+| **Mangrove Reviews** | Open review dataset for places, used by MapComplete | Review shape kept mappable to Mangrove |
+| **places.pub** | OSM places as ActivityStreams `Place` objects | Optional reference URIs for the ActivityPub bridge |
+| **Overture GERS** | Stable global IDs for places across datasets | Watch; MAY be used as an extra identity signal later |
+| **OGC API – Features** | Standard read API for geodata; Part 4 (CRUD) still a draft in 2026-10 | Optional extra read endpoint for GIS tools; not the sync channel |
+| **Federal Camping Data Standard** (US) | Field list for public campgrounds | Checklist for attribute keys |
+
+None of them combines immutable observations, a normative status rule with test vectors, backfill
+and per-entry licensing for travel places.
+
+## Comparison table (social / geo-social projects, v0.1)
 
 | Project | Social layer | POI DB | Federated | Live loc. | Travel tracks | Self-host | Stack |
 |---|---|---|---|---|---|---|---|
@@ -35,7 +52,7 @@ We do not treat live location as a mandatory MVP differentiator: it is a high-ri
 | **Polarsteps** | Partial (light) | No | No | Yes (friends) | Yes | No | Proprietary |
 | **OpenCampingMap** | No | Yes (OSM ro) | No | No | No | Yes | Python |
 | **places.pub** | No | Yes | Yes | No | No | Partial | TypeScript |
-| **TrailFed (planned)** | Yes | Yes | Yes | Partial (future, opt-in) | Yes | Yes | Go or TS/Fedify |
+| **TrailFed v0.2** | Bridge only | Shared, per participant | Yes (sync protocol) | No | No | Not required | Any stack |
 
 ## Detailed review of conceptually adjacent projects
 

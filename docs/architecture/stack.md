@@ -1,11 +1,16 @@
 ---
 title: Technology Stack
-version: 0.1
+version: 0.2
 status: draft
-updated: 2026-04-22
+updated: 2026-10-14
 ---
 
 # 04. Technology Choices and Rationale
+
+> **v0.2 note.** This document describes the stack of the frozen v0.1 reference server. The
+> v0.2 [core protocol](../spec/core.md) requires no particular stack: participants implement it in
+> their own (PHP/Laravel, Python, Go, TypeScript…). Where this file and ADR-0001 disagree on the
+> ActivityPub library, ADR-0001 (Fedify) is authoritative.
 
 ## Overview of the final stack
 
