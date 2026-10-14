@@ -6,7 +6,41 @@ Update discipline: tick items as you complete them (`- [ ]` → `- [x]`). Add ne
 
 ---
 
-## Phase 0 — public scaffold
+## v0.2 — Sync protocol (current)
+
+Course change: [ADR-0010](docs/adr/0010-sync-protocol-first.md). Phases are described in [docs/roadmap.md](docs/roadmap.md).
+
+### Phase 1 — Spec v0.2
+
+- [x] Core protocol spec (`docs/spec/core.md`): entries, discovery, feed, push, identity, trust, privacy, licensing
+- [x] Normative status resolution (`docs/spec/status-resolution.md`)
+- [x] JSON Schemas for entries and discovery (`docs/spec/schema/`)
+- [x] 14 status-resolution test vectors (`docs/spec/vectors/`)
+- [x] Reference implementation `server/src/protocol/status.ts` + vitest runner over all vectors
+- [x] ADR-0010 (sync protocol first) and ADR-0011 (per-entry data licence)
+- [x] Vision, positioning, roadmap, risks, OSM, privacy and ActivityPub-bridge docs updated to v0.2
+- [ ] Test vectors for `same_as` / `not_same` groups and canonical URI
+- [ ] Test vectors for attribute resolution (latest wins)
+- [ ] Static example feed in `docs/spec/examples/` readable end-to-end
+- [ ] Schema validation of vectors in CI (validate every vector entry against `entry.schema.json`)
+- [ ] Review by two developers of other travel apps
+- [ ] Update landing site `trailfed.org` to the v0.2 positioning
+
+### Phase 2 — First publisher: OpenVan.camp
+
+- [ ] `/.well-known/trailfed` + feed on openvan.camp
+- [ ] OSM-derived places as `place` entries (ODbL), users' map reports as `observation` entries
+- [ ] Derived status shown on the OpenVan.camp map
+- [ ] Validator CLI for any feed URL
+
+### Phase 3 — Pilot with a second app
+
+- [ ] Find a second independent app willing to pilot
+- [ ] Two-way feeds live; closure propagates in ≤ 15 minutes
+
+---
+
+## v0.1 — Phase 0 — public scaffold (done; reference server frozen by ADR-0010)
 
 ### Infrastructure & identity
 
@@ -65,7 +99,7 @@ Update discipline: tick items as you complete them (`- [ ]` → `- [x]`). Add ne
 
 ---
 
-## Phase 1 — ActivityPub MVP
+## v0.1 — Phase 1 — ActivityPub MVP (frozen by ADR-0010)
 
 Scope per `docs/roadmap.md`: minimal working federated server with user accounts, basic follow graph, places published as `Create Place`, and inter-instance delivery.
 
@@ -98,9 +132,9 @@ Scope per `docs/roadmap.md`: minimal working federated server with user accounts
 
 ---
 
-## Phase 2+ — see `docs/roadmap.md`
+## v0.1 Phase 2+ — superseded
 
-Not tracked here yet. Items will be lifted into this file as they enter the working set.
+The v0.1 Places MVP / web beta / check-ins phases are superseded by the v0.2 plan above.
 
 ---
 

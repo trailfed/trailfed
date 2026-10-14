@@ -1,11 +1,33 @@
 ---
 title: Privacy and Safety Model
-version: 0.1
+version: 0.2
 status: draft
-updated: 2026-04-22
+updated: 2026-10-14
 ---
 
 # 08. Privacy, Safety and Threat Model
+
+## Protocol-level privacy (v0.2)
+
+The [core protocol](core.md) exchanges place data, not people. What it needs from users is the
+minimum to tell "two different people reported this" from "one person reported twice":
+
+- **Per-place pseudonyms.** `contributor.id` MUST NOT be an email, username or account id and
+  SHOULD be `HMAC(secret, user_id + canonical_place_uri)`. Independence is only ever counted within
+  one place, so a per-place pseudonym is enough — and nobody can join a traveller's observations
+  across places into a route.
+- **Coarse time.** Publishers MAY round `observed_at` down to the hour and delay publishing by up to
+  an hour, so a feed does not reveal that someone is at a spot right now.
+- **No profiles, no follows, no location history** in the protocol.
+- **Erasure.** The publisher alone can map a user to their entries; on a deletion request it
+  publishes `retraction` entries with `reason: erasure`, and every reader deletes the content and
+  any evidence it copied.
+- **Photos.** Evidence and photos SHOULD have EXIF location and device data stripped before
+  publishing.
+
+**Live location is out of scope** of TrailFed v0.2. The threat model below was written for the
+v0.1 social/live-location design; it is kept for any participant that builds such features in its
+own app, and for a possible future extension, which would require a separate safety review.
 
 ## TL;DR
 

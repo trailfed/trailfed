@@ -1,0 +1,90 @@
+{
+  "name": "11-four-remote-reports",
+  "description": "Four remote reports (1 point each) from different contributors close the place.",
+  "now": "2026-03-10T00:00:00Z",
+  "entries": [
+    {
+      "id": "https://a.example/trailfed/e/p-1",
+      "type": "place",
+      "recorded_at": "2026-01-10T10:00:00Z",
+      "license": "ODbL-1.0",
+      "place": "https://a.example/p/1",
+      "geometry": {
+        "lat": 44.0426,
+        "lon": 43.3256
+      },
+      "category": "campsite",
+      "name": {
+        "en": "Lake View Camp"
+      },
+      "created_at": "2026-01-10T10:00:00Z",
+      "contributor": {
+        "id": "c:creator",
+        "on_site": true
+      }
+    },
+    {
+      "id": "https://b.example/trailfed/e/o-1",
+      "type": "observation",
+      "recorded_at": "2026-03-01T09:00:00Z",
+      "license": "CC-BY-4.0",
+      "place": "https://a.example/p/1",
+      "kind": "access",
+      "value": "closed",
+      "observed_at": "2026-03-01T09:00:00Z",
+      "contributor": {
+        "id": "c:r1",
+        "on_site": false
+      }
+    },
+    {
+      "id": "https://b.example/trailfed/e/o-2",
+      "type": "observation",
+      "recorded_at": "2026-03-02T09:00:00Z",
+      "license": "CC-BY-4.0",
+      "place": "https://a.example/p/1",
+      "kind": "access",
+      "value": "closed",
+      "observed_at": "2026-03-02T09:00:00Z",
+      "contributor": {
+        "id": "c:r2",
+        "on_site": false
+      }
+    },
+    {
+      "id": "https://b.example/trailfed/e/o-3",
+      "type": "observation",
+      "recorded_at": "2026-03-03T09:00:00Z",
+      "license": "CC-BY-4.0",
+      "place": "https://a.example/p/1",
+      "kind": "access",
+      "value": "closed",
+      "observed_at": "2026-03-03T09:00:00Z",
+      "contributor": {
+        "id": "c:r3",
+        "on_site": false
+      }
+    },
+    {
+      "id": "https://b.example/trailfed/e/o-4",
+      "type": "observation",
+      "recorded_at": "2026-03-04T09:00:00Z",
+      "license": "CC-BY-4.0",
+      "place": "https://a.example/p/1",
+      "kind": "access",
+      "value": "closed",
+      "observed_at": "2026-03-04T09:00:00Z",
+      "contributor": {
+        "id": "c:r4",
+        "on_site": false
+      }
+    }
+  ],
+  "expected": {
+    "status": "closed",
+    "since": "2026-03-01T09:00:00Z",
+    "last_confirmed": "2026-03-04T09:00:00Z",
+    "stale": false,
+    "pending": null
+  }
+}

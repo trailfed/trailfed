@@ -2,7 +2,37 @@
 
 All notable changes to TrailFed will be documented here. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [SemVer](https://semver.org/).
 
-## [Unreleased] — Phase 0 scaffold
+## [Unreleased]
+
+## [0.2.0] — 2026-10-14
+
+TrailFed changes course from "Mastodon for travellers" to an open protocol for keeping place data in sync between existing apps ([ADR-0010](docs/adr/0010-sync-protocol-first.md)).
+
+### Added
+- Core protocol specification v0.2: `place`, `observation`, `link` and `retraction` entries; `/.well-known/trailfed` discovery; cursor feed with full history; optional signed push (RFC 9421, Ed25519); identity via OSM reference and `same_as` links; trust levels; per-place contributor pseudonyms; per-entry licence and attribution.
+- Normative status resolution — the shared rule for when a spot counts as closed, reported or not confirmed for a year — with 14 test vectors.
+- JSON Schemas for entries and the discovery document.
+- Reference implementation of status resolution (`server/src/protocol/status.ts`) with a test runner over all vectors.
+- ADR-0010 (sync protocol first) and ADR-0011 (data licence per entry, attribution required).
+- Prior-art table in positioning: OSM replication, RPDE, OCPI, GBFS, Mangrove Reviews, places.pub, Overture GERS, OGC API – Features.
+- New risks R18–R22: no second participant, status gaming, divergent status, location-history leak, licence mismatch.
+
+### Changed
+- Vision, roadmap, risks, OSM and privacy documents rewritten for v0.2; the roadmap is now measured by how many independent apps show the same status for the same spots.
+- ActivityPub is now an optional bridge for announcing entries to the Fediverse, not the sync channel.
+- The reference server is frozen as a v0.1 demo; ADRs 0001–0008 apply to it only.
+- Package versions set to 0.2.0.
+
+### Deprecated
+- v0.1 extensions `trailfed:qualityTier`, `trailfed:amenities` and `trailfed:Merge`; replaced by derived status, OSM-style attributes and `link` entries.
+
+### Removed
+- `price_eur` from the place model: prices are local amount + currency only, since a pre-converted price goes stale with the exchange rate.
+- Live location, check-ins and travel tracks from the protocol scope.
+
+## [0.1.0] — 2026-04-23
+
+Phase 0 scaffold and the ActivityPub reference server experiment.
 
 ### Changed
 - **Federation layer refactored onto [@fedify/fedify](https://fedify.dev).** The hand-rolled HTTP Signature verifier/signer, inbox dispatcher, follow/accept round-trip, outbox delivery, WebFinger responder, and NodeInfo dispatcher are all deleted — Fedify owns HTTP Signatures (draft-cavage-12 + RFC 9421 + Linked Data Signatures), JSON-LD context, and signed activity delivery now. The server keeps only persistence callbacks (actor lookup, keypair import, Follow/Create-Place/Flag inbox listeners that write to our schema) and business routes (registration, outbox publish, moderation admin). ~1,100 lines of custom federation code removed. Node base image bumped to 22 (Fedify requirement).

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trailfed.org/schema/0.2/discovery.schema.json",
+  "title": "TrailFed discovery document v0.2",
+  "description": "Served at /.well-known/trailfed. See docs/spec/core.md §3.",
+  "type": "object",
+  "required": ["protocol", "version", "participant", "feed", "default_license", "roles"],
+  "properties": {
+    "protocol": { "const": "trailfed" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "participant": {
+      "type": "object",
+      "required": ["name", "url"],
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "contact": { "type": "string" }
+      }
+    },
+    "feed": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "inbox": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "keys": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kid", "kty", "crv", "x"],
+        "properties": {
+          "kid": { "type": "string" },
+          "kty": { "const": "OKP" },
+          "crv": { "const": "Ed25519" },
+          "x": { "type": "string" }
+        }
+      }
+    },
+    "default_license": { "type": "string" },
+    "roles": {
+      "type": "array",
+      "items": { "enum": ["reader", "publisher", "inbox"] },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "if": { "properties": { "roles": { "contains": { "const": "inbox" } } } },
+  "then": { "required": ["inbox", "keys"] }
+}

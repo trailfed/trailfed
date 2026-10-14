@@ -1,8 +1,8 @@
 ---
 title: OpenStreetMap Integration
-version: 0.1
+version: 0.2
 status: draft
-updated: 2026-04-22
+updated: 2026-10-14
 ---
 
 # 07. OSM Integration
@@ -15,9 +15,27 @@ TrailFed **does not replace** OpenStreetMap. OSM is the source of truth for pers
 - Ephemeral data (seasonality, temporary closures)
 - Van-specific options (height limit, van-friendly amenities)
 - Free camping spots (OSM does not map illegal/grey zones in some countries)
-- Social layer (who has been there recently, tracks)
+- Who confirmed the spot recently, and whether it is open right now (observations)
 
-The model is like iOverlander: OSM for the base, our own overlay for specialty data.
+OSM for the base, observations from participating apps for everything that changes.
+
+## OSM in the core protocol (v0.2)
+
+- **Identity.** A `place` entry SHOULD carry its OSM reference (`"osm": "node/123"`). Two places
+  with the same reference are the same place for every participant, without a `link` entry
+  ([core §6](core.md#6-identity-and-duplicates)). This is the cheapest and strongest dedup signal.
+- **Vocabulary.** Categories and attribute keys follow OSM tagging ([core §7](core.md#7-vocabulary)).
+- **Licence.** Places and attributes taken from OSM are published as `ODbL-1.0` with
+  "© OpenStreetMap contributors" attribution ([ADR-0011](../adr/0011-per-entry-data-license.md)).
+  Observations made by participants' users are separate entries under their own licence.
+- **Keeping up with OSM.** Publishers that mirror OSM SHOULD follow OSM replication diffs or
+  periodic PBF extracts, not bulk Overpass queries, and publish changes as new entries.
+- **Durable facts go back to OSM.** A permanent change (campsite closed for good, new water tap)
+  SHOULD be offered to the user as an OSM edit under their own OSM account. Temporary state
+  (closed this week, barrier) stays in TrailFed observations.
+
+The sections below describe how the v0.1 reference server used OSM (tiles, import, geocoding,
+routing). They remain valid for any participant building its own map.
 
 ## Three aspects of the integration
 
@@ -205,7 +223,7 @@ OpenStreetMap data is licensed under [ODbL 1.0](https://opendatacommons.org/lice
 
 Requirements for us:
 1. **Attribution** — every imported POI must indicate its OSM source
-2. **Share-Alike** — our derived data is also open (we use ODbL for TrailFed POI data)
+2. **Share-Alike** — OSM-derived data stays open under ODbL; participants' own observations are licensed per entry ([ADR-0011](../adr/0011-per-entry-data-license.md))
 3. **Keep Open** — if we modify OSM data, derivatives remain open
 
 We comply by:
@@ -236,7 +254,7 @@ When a user contributes an edit to OSM:
 
 ## iOverlander precedent
 
-iOverlander successfully co-exists with OSM: they import OSM POIs, add their own layer (reviews), and encourage users to contribute back. We follow their model.
+iOverlander is said to co-exist with OSM: import OSM POIs, add their own layer (reviews), encourage users to contribute back. This is a claim from v0.1 that is not yet verified (see fact-check question 9).
 
 Links:
 - [iOverlander OSM integration](https://ioverlander.com/osm)

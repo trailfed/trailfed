@@ -12,6 +12,12 @@ We record significant architectural choices as ADRs, lightly following the [MADR
 | [0006](0006-realtime.md) | Accepted | Real-time: Centrifugo v6 standalone |
 | [0007](0007-monorepo.md) | Accepted | Monorepo with pnpm workspaces |
 | [0008](0008-geocoding-deferred.md) | Deferred | Self-hosted Nominatim/OSRM is optional |
+| [0009](0009-lego-stack-rule.md) | Accepted | Lego-stack rule: off-the-shelf libraries only |
+| [0010](0010-sync-protocol-first.md) | Accepted | Sync protocol first — observations, feeds and a shared status rule |
+| [0011](0011-per-entry-data-license.md) | Accepted | Data licence per entry, attribution required |
+
+ADRs 0001–0008 describe the v0.1 reference server; after ADR-0010 that server is a frozen demo and
+these decisions apply to it only. The protocol itself requires no particular stack.
 
 ## Process
 

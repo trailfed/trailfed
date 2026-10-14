@@ -23,6 +23,7 @@ pnpm --filter web dev
 - **Sign off** every commit with `git commit -s -m "..."` — we use the [Developer Certificate of Origin](https://developercertificate.org/) (DCO). No CLA.
 - **One logical change per PR.** Small PRs are reviewed faster.
 - **Write tests.** `server/` uses vitest; `web/` uses vitest + Playwright.
+- **Spec changes** (`docs/spec/`) that change behaviour MUST come with updated or new test vectors in `docs/spec/vectors/`, and the reference implementation in `server/src/protocol/` must still pass them.
 - **Pass CI.** Lint, typecheck, tests and docker build must be green.
 - **Use Conventional Commits** for commit messages: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`, followed by a short, imperative description.
 

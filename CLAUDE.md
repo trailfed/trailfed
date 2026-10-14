@@ -104,7 +104,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## TrailFed-specific notes
 
-- Phase 0 scaffold only — see [docs/roadmap.md](docs/roadmap.md) before adding features outside the current phase.
+- Since v0.2 ([ADR-0010](docs/adr/0010-sync-protocol-first.md)) the product is the **sync protocol** in [docs/spec/core.md](docs/spec/core.md). The reference server in `server/` is a frozen v0.1 demo — do not add features to it unless an ADR says so. See [docs/roadmap.md](docs/roadmap.md) for the current phase.
+- Status resolution is normative: any change to `docs/spec/status-resolution.md` or `server/src/protocol/status.ts` must keep all `docs/spec/vectors/*.json` passing, and behaviour changes need new vectors.
 - Governance: ADRs in [docs/adr/](docs/adr/) — material architectural changes require an ADR.
 - Contribution flow uses DCO sign-off (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 - License is AGPL-3.0-or-later; don't introduce dependencies with incompatible licenses.

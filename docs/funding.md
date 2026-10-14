@@ -1,11 +1,15 @@
 ---
 title: Funding and sustainability
-version: 0.1
+version: 0.2
 status: draft
-updated: 2026-04-22
+updated: 2026-10-14
 ---
 
 # 10. Funding and sustainability
+
+> **v0.2 note.** With [ADR-0010](adr/0010-sync-protocol-first.md) the project is a protocol, not a
+> hosted server, so central infrastructure costs below shrink to the website, spec hosting and a
+> conformance runner. The work to fund is spec maintenance, libraries and helping apps integrate.
 
 ## Financial philosophy
 

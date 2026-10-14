@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trailfed.org/schema/0.2/entry.schema.json",
+  "title": "TrailFed entry v0.2",
+  "description": "One immutable entry of a TrailFed feed. See docs/spec/core.md.",
+  "type": "object",
+  "required": ["id", "type", "recorded_at"],
+  "properties": {
+    "id": { "$ref": "#/$defs/httpsUri" },
+    "type": { "enum": ["place", "observation", "link", "retraction"] },
+    "recorded_at": { "$ref": "#/$defs/time" },
+    "license": { "type": "string", "description": "SPDX licence identifier, e.g. CC-BY-4.0, ODbL-1.0, CC0-1.0" },
+    "attribution": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string" },
+        "url": { "$ref": "#/$defs/httpsUri" }
+      }
+    },
+    "retracted": { "const": true, "description": "Tombstone of a retracted entry; other fields are absent." }
+  },
+  "if": { "required": ["retracted"] },
+  "then": {},
+  "else": {
+    "required": ["license"],
+    "oneOf": [
+      { "$ref": "#/$defs/place" },
+      { "$ref": "#/$defs/observation" },
+      { "$ref": "#/$defs/link" },
+      { "$ref": "#/$defs/retraction" }
+    ]
+  },
+  "$defs": {
+    "httpsUri": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "time": { "type": "string", "format": "date-time" },
+    "localized": {
+      "type": "object",
+      "description": "Text by BCP 47 language tag",
+      "additionalProperties": { "type": "string" },
+      "minProperties": 1
+    },
+    "access": { "enum": ["open", "closed", "restricted", "seasonal_closed"] },
+    "contributor": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "description": "Pseudonym, SHOULD be per place. Never an email or username." },
+        "on_site": { "type": "boolean" }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": { "$ref": "#/$defs/httpsUri" },
+          "license": { "type": "string" }
+        }
+      }
+    },
+    "category": {
+      "enum": [
+        "campsite",
+        "caravan_site",
+        "overnight_parking",
+        "informal_spot",
+        "drinking_water",
+        "dump_station",
+        "toilets",
+        "shower",
+        "fuel",
+        "lpg",
+        "laundry",
+        "repair"
+      ]
+    },
+    "place": {
+      "type": "object",
+      "required": ["type", "place", "geometry", "category", "created_at"],
+      "properties": {
+        "type": { "const": "place" },
+        "place": { "$ref": "#/$defs/httpsUri" },
+        "geometry": {
+          "type": "object",
+          "required": ["lat", "lon"],
+          "properties": {
+            "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+            "lon": { "type": "number", "minimum": -180, "maximum": 180 }
+          }
+        },
+        "category": { "$ref": "#/$defs/category" },
+        "name": { "$ref": "#/$defs/localized" },
+        "osm": { "type": "string", "pattern": "^(node|way|relation)/[0-9]+$" },
+        "tags": { "type": "object", "additionalProperties": { "type": "string" } },
+        "access": { "$ref": "#/$defs/access" },
+        "created_at": { "$ref": "#/$defs/time" },
+        "contributor": { "$ref": "#/$defs/contributor" }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "required": ["type", "place", "kind", "observed_at", "contributor"],
+      "properties": {
+        "type": { "const": "observation" },
+        "place": { "$ref": "#/$defs/httpsUri" },
+        "kind": { "type": "string", "description": "access | confirm | attribute | review | photo; unknown kinds MUST be ignored" },
+        "observed_at": { "$ref": "#/$defs/time" },
+        "contributor": { "$ref": "#/$defs/contributor" },
+        "evidence": { "$ref": "#/$defs/evidence" },
+        "reason": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "access" } } },
+          "then": { "required": ["value"], "properties": { "value": { "$ref": "#/$defs/access" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "attribute" } } },
+          "then": {
+            "required": ["value"],
+            "properties": {
+              "value": {
+                "type": "object",
+                "required": ["key", "value"],
+                "properties": {
+                  "key": { "type": "string" },
+                  "value": {}
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "review" } } },
+          "then": {
+            "required": ["value"],
+            "properties": {
+              "value": {
+                "type": "object",
+                "properties": {
+                  "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
+                  "text": { "$ref": "#/$defs/localized" }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "photo" } } },
+          "then": {
+            "required": ["value"],
+            "properties": {
+              "value": {
+                "type": "object",
+                "required": ["url", "license"],
+                "properties": {
+                  "url": { "$ref": "#/$defs/httpsUri" },
+                  "license": { "type": "string" },
+                  "author": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "link": {
+      "type": "object",
+      "required": ["type", "relation", "a", "b"],
+      "properties": {
+        "type": { "const": "link" },
+        "relation": { "enum": ["same_as", "not_same"] },
+        "a": { "$ref": "#/$defs/httpsUri" },
+        "b": { "$ref": "#/$defs/httpsUri" },
+        "basis": { "enum": ["osm_ref", "distance_category", "human_review", "other"] }
+      }
+    },
+    "retraction": {
+      "type": "object",
+      "required": ["type", "target"],
+      "properties": {
+        "type": { "const": "retraction" },
+        "target": { "$ref": "#/$defs/httpsUri" },
+        "reason": { "enum": ["spam", "error", "erasure", "other"] }
+      }
+    }
+  }
+}
