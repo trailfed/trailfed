@@ -1,0 +1,54 @@
+{
+  "name": "05-strong-evidence",
+  "description": "A single report with a photo (evidence) closes the place.",
+  "now": "2026-03-02T00:00:00Z",
+  "entries": [
+    {
+      "id": "https://a.example/trailfed/e/p-1",
+      "type": "place",
+      "recorded_at": "2026-01-10T10:00:00Z",
+      "license": "ODbL-1.0",
+      "place": "https://a.example/p/1",
+      "geometry": {
+        "lat": 44.0426,
+        "lon": 43.3256
+      },
+      "category": "campsite",
+      "name": {
+        "en": "Lake View Camp"
+      },
+      "created_at": "2026-01-10T10:00:00Z",
+      "contributor": {
+        "id": "c:creator",
+        "on_site": true
+      }
+    },
+    {
+      "id": "https://b.example/trailfed/e/o-1",
+      "type": "observation",
+      "recorded_at": "2026-03-01T09:00:00Z",
+      "license": "CC-BY-4.0",
+      "place": "https://a.example/p/1",
+      "kind": "access",
+      "value": "closed",
+      "observed_at": "2026-03-01T09:00:00Z",
+      "contributor": {
+        "id": "c:u1",
+        "on_site": true
+      },
+      "evidence": [
+        {
+          "url": "https://b.example/img/1.jpg",
+          "license": "CC-BY-4.0"
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "status": "closed",
+    "since": "2026-03-01T09:00:00Z",
+    "last_confirmed": "2026-03-01T09:00:00Z",
+    "stale": false,
+    "pending": null
+  }
+}
